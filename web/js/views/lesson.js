@@ -6,6 +6,7 @@ import { cubby, quip } from '../cubby.js';
 import { WIDGETS } from '../widgets.js';
 import { mountMission } from '../mission.js';
 import { keycaps } from '../md.js';
+import { icon } from '../icons.js';
 
 export function verMatch(spec, major) {
   if (!spec || spec === 'any') return true;
@@ -40,16 +41,16 @@ export default async function (root, [lid]) {
     body.replaceChildren();
     body.append(
       h('div', { class: 'head' },
-        h('div', { class: 'crumbs' }, h('a', { href: '#/' }, 'Map'), ' / ', h('a', { href: '#/world/' + world.id }, `${world.emoji} ${world.title}`)),
+        h('div', { class: 'crumbs' }, h('a', { href: '#/' }, 'Map'), ' / ', h('a', { href: '#/world/' + world.id }, world.title), ' / ', 'sheet ' + (idx + 1) + ' of ' + seq.length),
         h('h1', { style: { marginTop: '6px' } }, les.title),
-        h('div', { class: 'meta' }, les.boss && h('span', { class: 'pill boss' }, '☠ BOSS'), h('span', { class: 'pill' }, les.minutes + ' min'),
+        h('div', { class: 'meta' }, les.boss && h('span', { class: 'pill boss' }, 'Boss'), h('span', { class: 'pill' }, les.minutes + ' min'),
           h('span', { class: 'pill acc' }, S.overview.worlds.flatMap(w => w.lessons).find(l => l.id === lid).xp + ' XP'),
-          st.completed && h('span', { class: 'pill', style: { color: 'var(--good)' } }, '✓ completed'),
-          h('span', { class: 'pill' }, `showing Blender ${major}.x notes`))));
+          st.completed && h('span', { class: 'pill', style: { color: 'var(--good)', borderColor: 'var(--good)' } }, 'Completed'),
+          h('span', { class: 'pill' }, `Blender ${major}.x notes`))));
     if (les.scene !== 'keep') {
-      body.append(h('div', { class: 'setup-bar' }, h('span', {}, '🧱'),
+      body.append(h('div', { class: 'setup-bar' }, h('span', { html: icon('cube', 20) }),
         h('div', { class: 'grow' }, h('b', {}, 'This lesson starts from a prepared scene. '),
-          h('span', { class: 'dim' }, les.scene === 'fresh' ? 'It gives you the factory scene (Cube, Light, Camera).' : 'It builds the starting model for you so you never depend on earlier lessons.')),
+          h('span', { class: 'dim' }, les.scene === 'fresh' ? 'You get the factory scene: Cube, Light, Camera.' : 'It builds the starting model for you, so nothing depends on how an earlier lesson went.')),
         h('button', { class: 'pri sm', onclick: async e => {
           e.target.disabled = true;
           const r = await api('lesson/prep', {});
@@ -78,10 +79,10 @@ export default async function (root, [lid]) {
 
   function quest(b) {
     return h('div', { class: 'quest', 'data-id': b.id },
-      h('div', { class: 'qh' }, h('span', { class: 'tag' }, b.optional ? 'Stretch' : 'Quest'), h('b', {}, b.title), h('span', { class: 'xp' }, '+' + b.xp + ' XP')),
-      h('div', { html: md(b.text) }),
+      h('div', { class: 'qh' }, h('span', { class: 'tag' }, b.optional ? 'Stretch' : 'Task'), h('b', {}, b.title), h('span', { class: 'xp' }, '+' + b.xp + ' XP')),
+      h('div', { class: 'qb', html: md(b.text) }),
       b.keys.length ? h('div', { class: 'keys-card', html: b.keys.map(keycaps).join(' ') }) : null,
-      b.why && h('div', { class: 'dim', style: { fontSize: '.88rem', marginTop: '6px' } }, '💬 ' + b.why),
+      b.why && h('div', { class: 'dim', style: { fontSize: '.88rem', marginTop: '6px' } }, b.why),
       h('div', { class: 'qs dim', style: { marginTop: '8px', fontSize: '.85rem' } }));
   }
 
@@ -92,8 +93,8 @@ export default async function (root, [lid]) {
       card.classList.toggle('done', d);
       const t = live.find(x => x.id === id);
       const n = t ? t.checks.filter(c => c.ok).length : 0;
-      $('.qs', card).textContent = d ? '✔ Done. ' + (st.done[id].how === 'auto' ? 'Blender confirmed it.' : '') :
-        t ? (S.bridge.connected ? `Watching your scene… ${n}/${t.checks.length} checks passing` : 'Blender isn’t linked: use “Mark done” in the panel') : '';
+      $('.qs', card).textContent = d ? (st.done[id].how === 'auto' ? 'Blender confirmed it.' : 'Marked done.') :
+        t ? (S.bridge.connected ? `Watching your scene: ${n} of ${t.checks.length} checks passing` : 'Blender is not linked. Use Mark done in the panel.') : '';
     });
   }
 

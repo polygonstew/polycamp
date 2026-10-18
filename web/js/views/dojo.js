@@ -3,6 +3,7 @@ import { h, beep, clear } from '../ui.js';
 import { S, api } from '../api.js';
 import { capture, matches, RESERVED } from '../keys.js';
 import { keycaps } from '../md.js';
+import { icon } from '../icons.js';
 
 export default async function (root) {
   const { decks, totals } = await api('dojo/decks');
@@ -10,8 +11,8 @@ export default async function (root) {
   let stopCap = null, timer = 0;
   const stage = h('div');
   root.append(h('div', { class: 'dojo' },
-    h('h1', {}, '⌨ Hotkey Dojo'),
-    h('p', { class: 'dim' }, 'The fastest way to get “pro” is to stop hunting menus. Pick decks, press the keys on your real keyboard, and the cards you miss come back sooner. Correct answers earn a little XP and 💎 for hints.'),
+    h('div', { class: 'sheet' }, 'Drill'), h('h1', {}, 'Hotkey Dojo'),
+    h('p', { class: 'dim' }, 'Menus are slow. Pick a deck and press the real keys on your real keyboard. The cards you miss come back sooner. Right answers earn a little XP, and now and then a gem for hints.'),
     stage));
 
   const menu = () => {
@@ -24,9 +25,9 @@ export default async function (root) {
         return el;
       })),
       h('div', { class: 'row', style: { marginTop: '16px' } },
-        h('button', { class: 'pri', onclick: () => run(10, false) }, '▶ Quick round (10)'),
+        h('button', { class: 'pri', onclick: () => run(10, false) }, 'Quick round (10)'),
         h('button', { onclick: () => run(25, false) }, '25 cards'),
-        h('button', { onclick: () => run(15, true) }, '⏱ Speed round (6 s per card)'),
+        h('button', { onclick: () => run(15, true) }, 'Speed round, 6 s a card'),
         h('span', { class: 'grow' }), h('span', { class: 'dim' }, `lifetime: ${totals.right} right, ${totals.wrong} wrong`)),
       h('p', { class: 'faint', style: { fontSize: '.82rem' } }, 'The browser keeps a few combos for itself (Ctrl+N, Ctrl+T, Ctrl+W, F5, F11, F12). Those cards live in the cheat sheet only.'));
   };
@@ -41,7 +42,7 @@ export default async function (root) {
     const finish = () => {
       stopCap && stopCap();
       clear(arena);
-      arena.append(h('h2', {}, right === cards.length ? '🏆 Perfect round' : 'Round complete'), h('p', { class: 'dim' }, `${right}/${cards.length} correct · best streak ${best}`),
+      arena.append(h('h2', {}, right === cards.length ? 'Perfect round' : 'Round over'), h('p', { class: 'dim' }, `${right} of ${cards.length} right, best run ${best}`),
         h('div', { class: 'row', style: { justifyContent: 'center' } }, h('button', { class: 'pri', onclick: () => run(n, speed) }, 'Again'), h('button', { onclick: () => { api('dojo/decks').then(d => { decks.splice(0, decks.length, ...d.decks); Object.assign(totals, d.totals); menu(); }); } }, 'Decks')));
     };
     const show = () => {
@@ -51,7 +52,7 @@ export default async function (root) {
       arena.className = 'arena';
       clear(arena);
       const bar = h('div', { class: 'bar timer' }, h('i', { style: { width: '100%', transition: speed ? 'width 6s linear' : 'none' } }));
-      arena.append(h('div', { class: 'combo' }, combo > 1 ? `🔥 ${combo}` : ''), h('div', { class: 'faint' }, `${c.deck} · ${i + 1}/${cards.length}`),
+      arena.append(h('div', { class: 'combo' }, combo > 1 ? `x${combo}` : ''), h('div', { class: 'faint' }, `${c.deck} · ${i + 1}/${cards.length}`),
         h('div', { class: 'q' }, c.action), h('div', { class: 'tip' }, c.tip || ''), h('div', { class: 'got' }, 'press the keys…'), speed ? bar : null);
       if (speed) { requestAnimationFrame(() => requestAnimationFrame(() => { bar.firstChild.style.width = '0%'; })); timer = setTimeout(() => answer(null), 6000); }
     };
@@ -63,7 +64,7 @@ export default async function (root) {
       right += ok ? 1 : 0; combo = ok ? combo + 1 : 0; best = Math.max(best, combo);
       beep(ok ? 'tick' : 'bad', S.settings.sound);
       arena.classList.add(ok ? 'ok' : 'no');
-      arena.querySelector('.got').innerHTML = ok ? `✔ ${keycaps(got)}` : `${got ? 'You pressed ' + keycaps(got) + '. ' : 'Time! '}It is ${keycaps(c.combo)}`;
+      arena.querySelector('.got').innerHTML = ok ? keycaps(got) : `${got ? 'You pressed ' + keycaps(got) + '. ' : 'Out of time. '}It is ${keycaps(c.combo)}`;
       api('dojo/result', { id: c.id, ok });
       setTimeout(() => { i++; i >= cards.length ? finish() : show(); }, ok ? 650 : 1700);
     };

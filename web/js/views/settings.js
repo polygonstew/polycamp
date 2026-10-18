@@ -8,11 +8,11 @@ export default async function (root) {
   const comfy = await api('comfy/status');
   const sel = (key, opts) => h('select', { onchange: e => saveSetting({ [key]: e.target.value }) }, opts.map(([v, t]) => h('option', { value: v, selected: String(s[key]) === String(v) }, t)));
   const txt = (key, w = '320px') => h('input', { type: 'text', value: s[key] || '', style: { width: w }, onchange: e => saveSetting({ [key]: e.target.value }).then(() => toast('Saved', 'good', 1200)) });
-  root.append(h('h1', {}, '⚙ Settings'), h('div', { class: 'form' },
+  root.append(h('div', { class: 'sheet' }, 'Setup'), h('h1', {}, 'Settings'), h('div', { class: 'form' },
     h('label', {}, 'Your name'), txt('name', '200px'),
-    h('label', {}, 'Layout'), sel('layout', [['auto', 'Auto (dual when the window is wide)'], ['dual', 'Dual: lesson + live panel side by side'], ['single', 'Single screen: panel docks at the bottom']]),
+    h('label', {}, 'Layout'), sel('layout', [['auto', 'Automatic (follows window width)'], ['dual', 'Dual: lesson and live panel side by side'], ['single', 'Single screen: the panel docks along the bottom']]),
     h('label', {}, 'Blender version notes'), sel('blender_major', [['auto', 'Auto (from the linked Blender)'], ['3', 'Blender 3.x'], ['4', 'Blender 4.x'], ['5', 'Blender 5.x']]),
-    h('label', {}, 'Theme'), sel('theme', [['ember', 'Ember (orange)'], ['ocean', 'Ocean'], ['grape', 'Grape'], ['moss', 'Moss']]),
+    h('label', {}, 'Theme'), sel('theme', [['ember', 'Survey orange'], ['ocean', 'Teal'], ['grape', 'Violet'], ['moss', 'Olive']]),
     h('label', {}, 'Text size'), h('input', { type: 'range', min: '0.85', max: '1.5', step: '0.05', value: s.text_scale, onchange: e => saveSetting({ text_scale: e.target.value }) }),
     h('label', {}, 'Sounds'), h('input', { type: 'checkbox', checked: s.sound, onchange: e => saveSetting({ sound: e.target.checked }) }),
     h('h3', { style: { gridColumn: '1/-1', margin: '16px 0 0' } }, 'ComfyUI (texture generation)'),

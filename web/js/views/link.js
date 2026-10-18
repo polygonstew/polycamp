@@ -1,6 +1,7 @@
 // link.js - install and troubleshooting guide for the Blender add-on, plus the two-monitor layout advice.
 import { h } from '../ui.js';
 import { S, on } from '../api.js';
+import { icon } from '../icons.js';
 
 export default async function (root) {
   const url = location.origin;
@@ -9,14 +10,14 @@ export default async function (root) {
     const cl = (S.bridge.clients || []).filter(c => c.alive);
     status.replaceChildren(cl.length
       ? h('div', { class: 'note tip' }, h('b', { class: 't' }, 'Connected'), cl.map(c => h('div', {}, `Blender ${c.blender} on ${c.host || c.ip} (${c.platform})${c.file ? ' · ' + c.file : ''}`)))
-      : h('div', { class: 'note warn' }, h('b', { class: 't' }, 'Waiting for Blender…'), 'This page turns green the moment the add-on connects.'));
+      : h('div', { class: 'note warn' }, h('b', { class: 't' }, 'Waiting for Blender'), 'This turns green the moment the add-on connects.'));
   };
   paint();
   const off = on('live', paint);
   root.append(h('div', { style: { maxWidth: '980px' } },
-    h('h1', {}, '🔌 Link Blender'), status,
+    h('div', { class: 'sheet' }, 'Setup'), h('h1', {}, 'Link Blender'), status,
     h('div', { class: 'card' }, h('h3', { style: { marginTop: 0 } }, '1. Get the add-on'),
-      h('div', { class: 'row' }, h('a', { class: 'btn pri', href: '/addon/polycamp_link.zip' }, '⬇ polycamp_link.zip'), h('span', { class: 'dim' }, 'It already contains this server’s address: ' ), h('code', {}, url)),
+      h('div', { class: 'row' }, h('a', { class: 'btn pri', href: '/addon/polycamp_link.zip', html: icon('down', 16) + ' polycamp_link.zip' }), h('span', { class: 'dim' }, 'It already contains this server’s address: ' ), h('code', {}, url)),
       h('p', { class: 'dim' }, 'Blender on a different computer (say, Windows)? Open this page in that computer’s browser using the LAN address ', h('code', {}, S.lan || url), ' and download the zip there.')),
     h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', { style: { marginTop: 0 } }, '2. Install it'),
       h('ul', {}, h('li', {}, h('b', {}, 'Blender 3.3: '), 'Edit > Preferences > Add-ons > Install… > pick the zip > tick “System: Polycamp Link”.'),
@@ -25,7 +26,7 @@ export default async function (root) {
       h('p', {}, 'Then in any 3D viewport press ', h('kbd', {}, 'N'), ' and open the ', h('b', {}, 'Polycamp'), ' tab.')),
     h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', { style: { marginTop: 0 } }, 'Two monitors, or one'),
       h('div', { class: 'row', style: { gap: '30px', alignItems: 'flex-start' } }, layoutDiagram('dual'), layoutDiagram('single')),
-      h('ul', {}, h('li', {}, h('b', {}, 'Dual: '), 'Blender full-screen on monitor 1. This page on monitor 2, with the live quest panel on the right. Use ', h('b', {}, '⧉ HUD'), ' in the top bar for a slim tasks-only window.'),
+      h('ul', {}, h('li', {}, h('b', {}, 'Dual: '), 'Blender full-screen on monitor 1. This page on monitor 2, with the live quest panel on the right. Use ', h('b', {}, 'HUD'), ' in the top bar for a slim tasks-only window.'),
         h('li', {}, h('b', {}, 'Single: '), 'switch the top-bar layout to Single, or enable “Show tasks in the 3D viewport” in the add-on preferences so the tasks float over Blender itself. The sidebar tab shows them too, no browser needed.'))),
     h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', { style: { marginTop: 0 } }, 'Not connecting?'),
       h('ul', {}, h('li', {}, 'In the add-on preferences, “Polycamp server” must match the address in your browser bar (', h('code', {}, url), ').'),

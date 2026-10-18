@@ -7,7 +7,7 @@ export default async function (root) {
   const { decks } = await api('cheatsheet');
   const out = h('div');
   const q = h('input', { type: 'search', placeholder: 'search: extrude, bevel, F12…', style: { width: '100%', maxWidth: '420px' }, oninput: draw });
-  root.append(h('h2', { style: { marginTop: 0 } }, 'Hotkey cheat sheet'), q, out);
+  root.append(h('h2', { style: { marginTop: 0 } }, 'Hotkeys'), q, out);
   function draw() {
     const t = q.value.toLowerCase();
     clear(out);

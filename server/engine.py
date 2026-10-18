@@ -66,16 +66,16 @@ class Engine:
     def _badge_public(self, bid, ts):
         if bid.startswith("boss-"):
             w = self.content.by_id.get(bid[5:])
-            return {"id": bid, "emoji": "🗡️", "title": "Boss slain: " + (w.title if w else bid[5:]),
+            return {"id": bid, "emoji": "skull", "title": "Boss slain: " + (w.title if w else bid[5:]),
                     "desc": "Beat the boss lesson", "ts": ts}
-        e, t, d = gamify.BADGES.get(bid, ("🏅", bid, ""))
+        e, t, d = gamify.BADGES.get(bid, ("star", bid, ""))
         return {"id": bid, "emoji": e, "title": t, "desc": d, "ts": ts}
 
     def all_badges(self):
         have = {b["id"] for b in self.profile()["badges"]}
         out = [{"id": k, "emoji": v[0], "title": v[1], "desc": v[2], "have": k in have} for k, v in gamify.BADGES.items()]
         for w in self.content.worlds:
-            out.append({"id": "boss-" + w.id, "emoji": "🗡️", "title": "Boss slain: " + w.title,
+            out.append({"id": "boss-" + w.id, "emoji": "skull", "title": "Boss slain: " + w.title,
                         "desc": "Finish every lesson in " + w.title, "have": ("boss-" + w.id) in have})
         return out
 

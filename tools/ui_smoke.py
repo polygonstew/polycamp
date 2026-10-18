@@ -32,6 +32,13 @@ def main():
                 break
             except Exception:
                 time.sleep(0.2)
+        def post(path, data):
+            req = urllib.request.Request(BASE + path, data=__import__("json").dumps(data).encode(), headers={"Content-Type": "application/json"})
+            return urllib.request.urlopen(req, timeout=20).read()
+        post("/api/lesson/start", {"id": "link-up"})                      # give the screens some progress to draw
+        for t in ("linked", "rename"):
+            post("/api/lesson/claim", {"task": "link-up/" + t, "honor": True})
+        post("/api/answer", {"id": "link-up/q1", "value": [1]})
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/chromium", args=["--no-sandbox"])
             ctx = b.new_context(viewport={"width": 1700, "height": 950})
@@ -44,9 +51,31 @@ def main():
                 name = (path or "home").replace("/", "_")
                 pg.screenshot(path=os.path.join(OUT, name + ".png"))
                 print("ok", path or "home", "->", pg.title())
-            # texture lab: generate each procedural kind through the UI
+            # lesson widgets: pick the right quiz option in "organize" and check it
+            pg.goto(BASE + "/#/lesson/organize")
+            pg.wait_for_timeout(900)
+            pg.locator(".widget .opt").nth(1).click()
+            pg.locator(".widget button.pri").first.click()
+            pg.wait_for_timeout(500)
+            assert pg.locator(".widget.done").count() >= 1 or pg.locator(".fb.ok").count() >= 1, "quiz did not accept the right answer"
+            pg.screenshot(path=os.path.join(OUT, "lesson_quiz.png"))
+            # hotkey dojo: start a quick round and press a few keys
+            pg.goto(BASE + "/#/dojo")
+            pg.wait_for_timeout(600)
+            pg.get_by_text("Quick round").click()
+            pg.wait_for_timeout(300)
+            for key in ("a", "Shift+a", "g"):
+                pg.keyboard.press(key)
+                pg.wait_for_timeout(250)
+            pg.screenshot(path=os.path.join(OUT, "dojo_round.png"))
+            # texture lab: switch preset and generate through the UI
             pg.goto(BASE + "/#/lab")
             pg.wait_for_timeout(600)
+            pg.get_by_text("Stone bricks").click()
+            pg.wait_for_timeout(600)
+            pg.get_by_text("Relief (move the mouse)").click()
+            pg.mouse.move(700, 400)
+            pg.wait_for_timeout(300)
             pg.screenshot(path=os.path.join(OUT, "lab_default.png"))
             b.close()
     finally:

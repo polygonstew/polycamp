@@ -75,10 +75,10 @@ export default async function (root) {
     T.job = r.job;
     const poll = async () => {
       const j = await api('tex/job?id=' + T.job);
-      if (j.status === 'running') { msg.textContent = '⏳ ComfyUI is repainting… ' + fmtTime(j.elapsed); setTimeout(poll, 2000); }
+      if (j.status === 'running') { msg.textContent = 'ComfyUI is repainting: ' + fmtTime(j.elapsed); setTimeout(poll, 2000); }
       else if (j.status === 'done') {
         const im = new Image(); await new Promise(res => { im.onload = res; im.src = j.image + '?t=' + Date.now(); });
-        snap(); g.drawImage(im, 0, 0, SZ, SZ); msg.textContent = '✔ Repainted in ' + fmtTime(j.elapsed);
+        snap(); g.drawImage(im, 0, 0, SZ, SZ); msg.textContent = 'Repainted in ' + fmtTime(j.elapsed);
       } else msg.textContent = j.error || 'failed';
     };
     poll();
@@ -93,7 +93,7 @@ export default async function (root) {
   };
 
   const btn = (t, tool) => h('button', { class: 'sm', onclick: e => { T.tool = tool; [...e.target.parentNode.children].forEach(c => c.classList.remove('pri')); e.target.classList.add('pri'); } }, t);
-  root.append(h('div', { class: 'row' }, h('h1', { style: { margin: 0 } }, '🗺 UV Lab'), h('span', { class: 'dim' }, 'see the layout, paint on it, send it back')),
+  root.append(h('div', { class: 'row' }, h('div', {}, h('div', { class: 'sheet' }, 'Workshop'), h('h1', { style: { margin: 0 } }, 'UV lab')), h('span', { class: 'dim', style: { fontFamily: 'var(--serif)' } }, 'See the layout, paint on it, send it back.')),
     h('div', { class: 'uvgrid', style: { marginTop: '14px' } },
       h('div', {}, h('div', { class: 'uvstage', style: { position: 'relative' } }, paint, over),
         h('p', { class: 'faint', style: { fontSize: '.82rem' } }, 'Teal = covered, red = overlapping islands (usually a mistake), white = edges. The picture’s top edge is V = 1, like Blender’s UV Editor.')),

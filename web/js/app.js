@@ -2,6 +2,7 @@
 import { h, $, clear, toast, modal, confetti, beep } from './ui.js';
 import { S, on, api, loadState, connectEvents, layoutMode, saveSetting, applySettings } from './api.js';
 import { cubby, logoSvg, quip } from './cubby.js';
+import { icon } from './icons.js';
 
 const VIEWS = {
   '': 'home', world: 'world', lesson: 'lesson', dojo: 'dojo', lab: 'lab', uv: 'uv', trophies: 'trophies',
@@ -26,12 +27,14 @@ async function route() {
     cleanup = (await m.default(root, params)) || null;
   } catch (e) {
     console.error(e);
-    root.append(h('div', { class: 'card' }, h('h2', {}, 'Something broke'), h('pre', {}, String(e.stack || e))));
+    root.append(h('div', { class: 'card' }, h('h2', {}, 'That page broke'), h('pre', {}, String(e.stack || e))));
   }
   renderTop();
 }
 
 // ---------------------------------------------------------------- top bar
+const chip = (name, text, attrs = {}) => h(attrs.href ? 'a' : 'button', { class: 'chip', ...attrs, html: icon(name, 14) + (text !== '' ? `<span>${text}</span>` : '') });
+
 function renderTop() {
   const { name } = parse();
   const top = clear($('#top'));
@@ -39,23 +42,22 @@ function renderTop() {
   const lv = p.level;
   const conn = S.bridge.connected;
   const cl = (S.bridge.clients || []).find(c => c.alive);
-  const nav = [['', 'Map'], ['dojo', 'Hotkey Dojo'], ['lab', 'Texture Lab'], ['uv', 'UV Lab'], ['trophies', 'Trophy Room'], ['badges', 'Badges']];
+  const nav = [['', 'Map'], ['dojo', 'Dojo'], ['lab', 'Texture lab'], ['uv', 'UV lab'], ['trophies', 'Renders'], ['badges', 'Badges']];
   top.append(
     h('a', { class: 'logo', href: '#/', html: logoSvg() + '<span>Polycamp</span>' }),
     h('nav', { class: 'main' }, nav.map(([k, t]) => h('a', { href: '#/' + k, class: name === k ? 'on' : '' }, t))),
     h('div', { class: 'grow' }),
     h('a', { class: 'chip', href: '#/link', title: conn ? 'Blender is linked' : 'Click to set up the Blender link' },
       h('span', { class: 'dot' + (conn ? ' on' : '') }),
-      conn ? `Blender ${cl ? cl.blender.replace(/ LTS/, '') : ''}${cl && cl.file ? ' · ' + cl.file : ''}` : 'Blender not linked'),
-    h('button', { class: 'chip', title: 'Layout: ' + (S.settings.layout || 'auto') + ' (click to change)', onclick: cycleLayout },
-      layoutMode() === 'dual' ? '🖥🖥 Dual' : '🖥 Single'),
-    h('button', { class: 'chip', title: 'Open a small always-on-top-able task window for your second screen', onclick: popHud }, '⧉ HUD'),
-    h('span', { class: 'chip', title: 'Day streak' }, '🔥 ' + p.streak),
-    h('span', { class: 'chip', title: 'Gems: spend them on hints and solution peeks' }, '💎 ' + p.gems),
+      conn ? `Blender ${cl ? cl.blender.replace(/ LTS/, '') : ''}${cl && cl.file ? ' / ' + cl.file : ''}` : 'Blender not linked'),
+    chip(layoutMode() === 'dual' ? 'window2' : 'window1', layoutMode() === 'dual' ? 'Dual' : 'Single', { title: 'Layout: ' + (S.settings.layout || 'auto') + '. Click to change.', onclick: cycleLayout }),
+    chip('popout', 'HUD', { title: 'A small tasks-only window for your second screen', onclick: popHud }),
+    chip('flame', p.streak, { title: 'Day streak' }),
+    chip('gem', p.gems, { title: 'Gems: hints past the second one and solution peeks cost them' }),
     h('a', { class: 'xpbar', href: '#/badges', title: lv.xp + ' XP' },
-      h('div', { class: 'lbl' }, h('b', {}, `Lv ${lv.n} ${lv.title}`), h('span', {}, lv.to ? `${lv.xp}/${lv.to}` : `${lv.xp} XP`)),
+      h('div', { class: 'lbl' }, h('span', {}, `Lv ${lv.n} ${lv.title}`), h('span', {}, lv.to ? `${lv.xp}/${lv.to}` : `${lv.xp} XP`)),
       h('div', { class: 'bar' }, h('i', { style: { width: lv.pct + '%' } }))),
-    h('a', { class: 'chip', href: '#/settings', title: 'Settings' }, '⚙'),
+    chip('gear', '', { href: '#/settings', title: 'Settings' }),
   );
 }
 
@@ -64,7 +66,7 @@ async function cycleLayout() {
   const cur = S.settings.layout || 'auto';
   const next = order[(order.indexOf(cur) + 1) % 3];
   await saveSetting({ layout: next });
-  toast(`Layout: <b>${next}</b>${next === 'auto' ? ' (switches by window width)' : ''}`, 'info', 2200);
+  toast(`Layout: <b>${next}</b>${next === 'auto' ? ' (follows the window width)' : ''}`, 'info', 2200);
   route();
 }
 
@@ -79,35 +81,35 @@ on('profile', renderTop);
 on('award', m => {
   const parts = [];
   if (m.xp) parts.push(`+${m.xp} XP`);
-  if (m.gems > 0) parts.push(`+${m.gems} 💎`);
-  if (m.gems < 0) parts.push(`${m.gems} 💎`);
-  if (m.streak_bonus) parts.push(`streak bonus +${m.streak_bonus} 💎`);
+  if (m.gems > 0) parts.push(`+${m.gems} gem${m.gems > 1 ? 's' : ''}`);
+  if (m.gems < 0) parts.push(`${m.gems} gems`);
+  if (m.streak_bonus) parts.push(`streak bonus +${m.streak_bonus}`);
   if (parts.length && m.kind !== 'dojo') toast(`<div class="big">${parts.join('  ')}</div><div class="dim">${m.note || ''}</div>`, m.xp ? 'good' : 'info', 3200);
   if (m.level_up) {
     beep('level', S.settings.sound);
-    confetti(innerWidth / 2, innerHeight / 3, 160);
-    const mo = modal([h('div', { html: cubby('wink', 'cubby-big') }), h('h2', {}, `Level ${m.level.n}: ${m.level.title}`),
-      h('p', { class: 'dim' }, quip('done')), h('button', { class: 'btn pri', onclick: () => mo.close() }, 'Keep going')]);
+    confetti(innerWidth / 2, innerHeight / 3, 120);
+    const mo = modal([h('div', { html: cubby('wink', 'cubby-big') }), h('div', { class: 'sheet' }, 'New rank'), h('h2', {}, `Level ${m.level.n}: ${m.level.title}`),
+      h('p', { class: 'dim' }, quip('done')), h('button', { class: 'btn pri', onclick: () => mo.close() }, 'Carry on')]);
   }
 });
 on('task_done', m => {
   beep('task', S.settings.sound);
-  confetti(innerWidth * .62, innerHeight * .4, 50);
-  toast(`<div class="big">✔ ${m.title}</div><div class="dim">${m.how === 'auto' ? 'Blender confirmed it' : m.how}</div>`, 'good', 3500);
+  confetti(innerWidth * .62, innerHeight * .4, 36);
+  toast(`<div class="big">Done: ${m.title}</div><div class="dim">${m.how === 'auto' ? 'Blender confirmed it.' : m.how}</div>`, 'good', 3500);
 });
 on('lesson_done', m => {
-  confetti(innerWidth / 2, innerHeight / 3, m.boss ? 260 : 150);
+  confetti(innerWidth / 2, innerHeight / 3, m.boss ? 200 : 110);
   const mo = modal([h('div', { html: cubby(m.boss ? 'shock' : 'happy', 'cubby-big') }),
-    h('h2', {}, m.boss ? '⚔ Boss defeated!' : 'Lesson complete'), h('p', {}, h('b', {}, m.title)),
-    h('p', { class: 'dim' }, `+${m.xp} XP bonus. ${quip('done')}`),
+    h('div', { class: 'sheet' }, m.boss ? 'Boss down' : 'Lesson done'), h('h2', {}, m.title),
+    h('p', { class: 'dim' }, `+${m.xp} XP for finishing. ${quip('done')}`),
     h('div', { class: 'row', style: { justifyContent: 'center' } },
       m.next ? h('a', { class: 'btn pri', href: '#/lesson/' + m.next, onclick: () => mo.close() }, 'Next: ' + m.next_title) : h('a', { class: 'btn pri', href: '#/', onclick: () => mo.close() }, 'Back to the map'),
       h('button', { class: 'btn', onclick: () => mo.close() }, 'Stay here'))]);
 });
-on('badge', m => { confetti(innerWidth - 120, innerHeight - 120, 40); toast(`<div class="big">${m.badge.emoji} Badge: ${m.badge.title}</div><div class="dim">${m.badge.desc}</div>`, 'good', 5000); });
-on('render', m => toast(`<div class="big">🖼 New render saved</div><a href="#/trophies">Open the Trophy Room</a>`, 'info', 6000));
+on('badge', m => { confetti(innerWidth - 120, innerHeight - 120, 30); toast(`<div class="big">${icon(m.badge.emoji, 16)} ${m.badge.title}</div><div class="dim">${m.badge.desc}</div>`, 'good', 5000); });
+on('render', () => toast(`<div class="big">New render saved</div><a href="#/trophies">Open the renders page</a>`, 'info', 6000));
 on('texture', m => toast(`Texture set <b>${m.set}</b> saved.`, 'info', 3000));
-on('model', m => toast(m.exported ? `Model exported to <code>${m.exported}</code>` : 'Model received (set a Godot folder in Settings to copy it).', 'info', 5000));
+on('model', m => toast(m.exported ? `Model copied to <code>${m.exported}</code>` : 'Model received. Pick a Godot folder in Settings to have it copied out.', 'info', 5000));
 
 // ---------------------------------------------------------------- boot
 window.addEventListener('hashchange', route);

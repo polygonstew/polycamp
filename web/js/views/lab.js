@@ -94,10 +94,10 @@ export default async function (root) {
     if (!job) return;
     const j = await api('tex/job?id=' + job);
     if (j.status === 'running') {
-      status.innerHTML = `⏳ Cooking on your CPU… <b>${fmtTime(j.elapsed)}</b> (${j.steps || '?'} steps at ${j.side || '?'} px). ComfyUI is slow here, so go model something and come back.`;
+      status.innerHTML = `Cooking on your CPU: <b>${fmtTime(j.elapsed)}</b> (${j.steps || '?'} steps at ${j.side || '?'} px). ComfyUI is slow here, so go model something and come back.`;
       pollT = setTimeout(poll, 2000);
     } else if (j.status === 'done') {
-      status.textContent = '✔ Done in ' + fmtTime(j.elapsed); job = null;
+      status.textContent = 'Done in ' + fmtTime(j.elapsed); job = null;
       await fromImage(await loadUrl(j.image + '?t=' + Date.now()), false);
       toast('Texture ready. Check the 2×2 tile preview for seams.', 'good');
     } else { status.innerHTML = `<span class="bad">${j.error || 'failed'}</span>`; job = null; }
@@ -134,20 +134,20 @@ export default async function (root) {
     clear(tabs); clear(srcBody);
     [['proc', 'Procedural (instant)'], ['ai', 'ComfyUI (AI, slow)'], ['pic', 'My picture']].forEach(([m, t]) => tabs.append(h('span', { class: 'chip' + (G.mode === m ? ' on' : ''), onclick: () => { G.mode = m; drawSrc(); } }, t)));
     if (G.mode === 'proc') srcBody.append(h('div', { class: 'row' }, h('label', {}, 'colours'), colA, colB), h('div', { class: 'sliders', style: { margin: '8px 0' } }, slider('scale', G, 'scale', .4, 3, .1, () => { }), slider('seed', G, 'seed', 1, 99, 1, () => { })),
-      h('button', { class: 'pri', onclick: runProc }, '✨ Generate'), h('p', { class: 'faint', style: { fontSize: '.8rem' } }, 'Pure maths, tiles perfectly, and teaches you what Noise and Voronoi nodes do in Blender.'));
+      h('button', { class: 'pri', onclick: runProc }, 'Generate'), h('p', { class: 'faint', style: { fontSize: '.8rem' } }, 'Pure maths, tiles perfectly, and teaches you what Noise and Voronoi nodes do in Blender.'));
     if (G.mode === 'ai') srcBody.append(prompt,
       h('div', { class: 'row', style: { margin: '8px 0' } }, speedSel),
       comfy.ok ? h('div', { class: 'good', style: { fontSize: '.82rem' } }, `ComfyUI ${comfy.version} online · ${comfy.ckpt}${comfy.busy ? ' · busy' : ''}`) : h('div', { class: 'bad', style: { fontSize: '.82rem' } }, comfy.error),
-      h('div', { class: 'row', style: { marginTop: '8px' } }, h('button', { class: 'pri', onclick: () => cook(false) }, '🍳 Cook texture'), h('button', { onclick: () => api('tex/cancel', {}).then(() => { job = null; status.textContent = 'cancelled'; }) }, 'Cancel')),
+      h('div', { class: 'row', style: { marginTop: '8px' } }, h('button', { class: 'pri', onclick: () => cook(false) }, 'Cook texture'), h('button', { onclick: () => api('tex/cancel', {}).then(() => { job = null; status.textContent = 'cancelled'; }) }, 'Cancel')),
       h('div', { class: 'sliders', style: { marginTop: '8px' } }, slider('variation', G, 'denoise', .2, .9, .05, () => { })),
-      h('button', { class: 'sm', style: { marginTop: '6px' }, onclick: () => T.raw ? cook(true) : toast('Make or load a texture first', 'bad') }, '🎲 Variation of current (img2img)'),
+      h('button', { class: 'sm', style: { marginTop: '6px' }, onclick: () => T.raw ? cook(true) : toast('Make or load a texture first', 'bad') }, 'Variation of this one (img2img)'),
       h('p', { class: 'faint', style: { fontSize: '.8rem' } }, 'About 30 s per step at 512 px on this CPU. The result is made seamless for you afterwards.'));
-    if (G.mode === 'pic') srcBody.append(h('div', { class: 'row' }, h('button', { onclick: () => fileIn.click() }, '📁 Choose image'), fileIn), h('p', { class: 'dim', style: { fontSize: '.85rem' } }, 'Or drop a file on the preview, or paste (Ctrl+V). Photos of walls, floors and bark work great.'));
+    if (G.mode === 'pic') srcBody.append(h('div', { class: 'row' }, h('button', { onclick: () => fileIn.click() }, 'Choose an image'), fileIn), h('p', { class: 'dim', style: { fontSize: '.85rem' } }, 'Or drop a file on the preview, or paste (Ctrl+V). Photos of walls, floors and bark work great.'));
   };
   stage.addEventListener('dragover', e => e.preventDefault());
   stage.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
 
-  const previewBar = h('div', { class: 'chips' }, [['tile1', '1×'], ['tile2', '2×2 tile'], ['tile3', '3×3 tile'], ['relief', '💡 Relief (move mouse)']].map(([k, t]) => h('span', { class: 'chip' + (preview === k ? ' on' : ''), onclick: e => { preview = k; [...previewBar.children].forEach(c => c.classList.remove('on')); e.target.classList.add('on'); drawStage(); } }, t)));
+  const previewBar = h('div', { class: 'chips' }, [['tile1', '1×'], ['tile2', '2×2 tile'], ['tile3', '3×3 tile'], ['relief', 'Relief (move the mouse)']].map(([k, t]) => h('span', { class: 'chip' + (preview === k ? ' on' : ''), onclick: e => { preview = k; [...previewBar.children].forEach(c => c.classList.remove('on')); e.target.classList.add('on'); drawStage(); } }, t)));
 
   // ---------------- saving & sending ----------------
   const payload = () => {
@@ -181,11 +181,11 @@ export default async function (root) {
     const { sets } = await api('tex/list');
     clear(setsEl);
     sets.slice(0, 12).forEach(s => setsEl.append(h('div', { class: 'mapc', style: { width: '84px' } }, h('img', { src: s.thumb, style: { width: '100%', borderRadius: '6px', cursor: 'pointer' }, title: 'Load ' + s.name, onclick: async () => { nameIn.value = s.name; fromImage(await loadUrl(s.thumb + '?t=' + Date.now()), false); } }), h('label', {}, s.name),
-      h('a', { href: '#', onclick: async e => { e.preventDefault(); await api('tex/delete', { set: s.name }); loadSets(); } }, '✕'))));
+      h('a', { href: '#', onclick: async e => { e.preventDefault(); await api('tex/delete', { set: s.name }); loadSets(); } }, 'remove'))));
     if (!sets.length) setsEl.append(h('span', { class: 'faint' }, 'No saved sets yet.'));
   };
 
-  root.append(h('div', { class: 'row' }, h('h1', { style: { margin: 0 } }, '🧱 Texture Lab'), h('span', { class: 'dim' }, 'albedo → height → normal → roughness → AO, tileable, CPU friendly')),
+  root.append(h('div', { class: 'row' }, h('div', {}, h('div', { class: 'sheet' }, 'Workshop'), h('h1', { style: { margin: 0 } }, 'Texture lab')), h('span', { class: 'dim', style: { fontFamily: 'var(--serif)' } }, 'Make a tiling picture, derive its other maps, send them to Blender.')),
     h('div', { class: 'lab', style: { marginTop: '14px' } },
       h('div', { class: 'col' },
         h('div', { class: 'card' }, h('h4', {}, '1 · Source'), kindChips, h('div', { style: { height: '8px' } }), tabs, srcBody, status),
@@ -199,7 +199,7 @@ export default async function (root) {
         h('div', { class: 'card' }, h('h4', {}, '3 · Use it'), h('label', {}, 'Set name'), nameIn,
           h('div', { class: 'row', style: { margin: '8px 0' } }, check('height', P, 'inc_height'), check('normal', P, 'inc_normal'), check('rough', P, 'inc_roughness'), check('AO', P, 'inc_ao')),
           h('div', { class: 'sliders' }, slider('tiling', P, 'tiling', 1, 8, 1, () => { }), slider('bump', P, 'bump', 0, 1, .05, () => { })),
-          h('div', { class: 'row', style: { marginTop: '10px' } }, h('button', { onclick: save }, '💾 Save set'), h('button', { class: 'pri', onclick: toBlender }, '→ Blender (selected objects)'), h('button', { onclick: toGodot }, '→ Godot / Kiln')),
+          h('div', { class: 'row', style: { marginTop: '10px' } }, h('button', { onclick: save }, 'Save set'), h('button', { class: 'pri', onclick: toBlender }, '→ Blender (selected objects)'), h('button', { onclick: toGodot }, '→ Godot / Kiln')),
           h('p', { class: 'faint', style: { fontSize: '.78rem' } }, S.bridge.connected ? 'Blender is linked: select a mesh there first.' : 'Link Blender to send directly.')),
         h('div', { class: 'card' }, h('h4', {}, 'Saved sets'), setsEl))));
   drawKinds(); drawSrc(); loadSets();
