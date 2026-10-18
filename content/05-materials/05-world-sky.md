@@ -33,12 +33,14 @@ same way: sun elevation and rotation, air, dust and ozone.
 ## Dusk without any images
 
 Our diorama uses something cheaper and fully controllable: a **gradient** made from the direction of the view. A Texture
-Coordinate (Generated) gives each direction a vector. Its Z part is 0 at the horizon and 1 straight up. A **Map Range** squeezes
+Coordinate (Generated) gives each direction a vector. Its Z part is 0 at the horizon and 1 straight up. A **Map Range** (0 to about 0.3) squeezes
 that into 0 to 1, and a **Color Ramp** paints orange at the horizon fading through purple to deep blue overhead.
 
 Open **Shading** workspace, set the editor to **World** (the drop-down that says Object), and build:
 
-*Texture Coordinate > Separate XYZ (Z) > Map Range > Color Ramp > Background Color*
+*Texture Coordinate > Separate XYZ (Z) > Math (Absolute) > Map Range > Color Ramp > Background Color*
+
+The **Absolute** node mirrors the sky below the horizon. A floating diorama shows the world under its feet too, and a sky that goes black below the horizon looks like a hole in the universe.
 
 :::task id=sky title="Give the world a sky" xp=14
 Make the **World's Background Color** come from a node: a gradient (Color Ramp), a Sky Texture, or an Environment Texture.

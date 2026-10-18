@@ -117,7 +117,7 @@ def build_cabin(loc=(0, 0.3, 0), collection=None, mats=True):
     dark = mat_wood('Door_Wood', '#6a4322', '#2e1a0c', 7.0) if mats else None
     stone = mat_stone('Cabin_Stone', '#8a857a', '#46433e', 3.0) if mats else None
     roofm = mat_roof() if mats else None
-    glow = mat_glow('Window_Glow', '#ffb45e', 5.0) if mats else None
+    glow = mat_glow('Window_Glow', '#ffb45e', 8.0) if mats else None
     iron = mat_iron() if mats else None
     ob = {}
     root = bpy.data.objects.new('Cabin', None)
@@ -191,7 +191,7 @@ def build_cabin(loc=(0, 0.3, 0), collection=None, mats=True):
 def build_lantern(loc=(0, 0, 0), collection=None, mats=True, scale=1.0, name='Lantern', parent=None):
     col = collection or get_collection('Lantern')
     iron = mat_iron('Lantern_Iron') if mats else None
-    glass = mat_glow('Lantern_Glass', '#ffbf6b', 6.0) if mats else None
+    glass = mat_glow('Lantern_Glass', '#ffbf6b', 8.0) if mats else None
     flame = mat_glow('Flame', '#ffd08a', 40.0) if mats else None
     root = bpy.data.objects.new(name, None)
     root.location = loc
@@ -292,19 +292,22 @@ def build_pines(collection=None, mats=True):
 
 # ------------------------------------------------------------------ world, lights, camera
 
-def build_world_dusk(strength=1.0, top='#16204a', mid='#7a4f86', horizon='#ff9a52'):
-    """A dusk gradient sky made of plain nodes (same result on every Blender version, cheap on the CPU)."""
+def build_world_dusk(strength=0.6, top='#0e1740', mid='#58396e', horizon='#e07a38'):
+    """A dusk gradient sky made of plain nodes (same result on every Blender version, cheap on the CPU).
+    The sky mirrors below the horizon (Absolute), so a floating diorama sits in a glow, not a void."""
     w = kit.make_world((0.03, 0.04, 0.08, 1.0), strength)
     nt = w.node_tree
     bg = next(n for n in nt.nodes if n.type == 'BACKGROUND')
-    tc = _node(nt, 'ShaderNodeTexCoord', (-900, 0))
-    sep = _node(nt, 'ShaderNodeSeparateXYZ', (-700, 0))
-    mr = _node(nt, 'ShaderNodeMapRange', (-500, 0))
-    mr.inputs['From Min'].default_value = -0.02       # z of the view direction: 0 = horizon, 1 = straight up
+    tc = _node(nt, 'ShaderNodeTexCoord', (-1100, 0))
+    sep = _node(nt, 'ShaderNodeSeparateXYZ', (-900, 0))
+    ab = _node(nt, 'ShaderNodeMath', (-720, 0), operation='ABSOLUTE')
+    mr = _node(nt, 'ShaderNodeMapRange', (-540, 0))
+    mr.inputs['From Min'].default_value = 0.0         # |z| of the view direction: 0 = horizon, 1 = straight up
     mr.inputs['From Max'].default_value = 0.32
-    ramp = _ramp(nt, (-260, 0), [(0.0, horizon), (0.4, mid), (1.0, top)])
+    ramp = _ramp(nt, (-280, 0), [(0.0, horizon), (0.4, mid), (1.0, top)])
     nt.links.new(tc.outputs['Generated'], sep.inputs['Vector'])
-    nt.links.new(sep.outputs['Z'], mr.inputs['Value'])
+    nt.links.new(sep.outputs['Z'], ab.inputs[0])
+    nt.links.new(ab.outputs['Value'], mr.inputs['Value'])
     nt.links.new(mr.outputs['Result'], ramp.inputs['Fac'])
     nt.links.new(ramp.outputs['Color'], bg.inputs['Color'])
     return w
@@ -312,20 +315,20 @@ def build_world_dusk(strength=1.0, top='#16204a', mid='#7a4f86', horizon='#ff9a5
 
 def build_lights(collection=None, with_lantern_light=True):
     col = collection or get_collection('Lights')
-    sun = kit.add_light('SUN', 'Sun_Dusk', (-6, -5, 4.2), 3.2, (1.0, 0.64, 0.38), size=3, collection=col)
+    sun = kit.add_light('SUN', 'Sun_Dusk', (-6, -5, 4.2), 2.2, (1.0, 0.62, 0.36), size=3, collection=col)
     kit.look_at(sun, (0, 0, 0.6))
     fill = kit.add_light('AREA', 'Fill_Blue', (6, 5, 5), 90, (0.5, 0.62, 1.0), size=7, collection=col)
     kit.look_at(fill, (0, 0, 1))
     out = {'sun': sun, 'fill': fill}
     if with_lantern_light:
-        out['lantern'] = kit.add_light('POINT', 'Lantern_Light', (0.49, -2.15, 1.82 + _gh(1.15, -2.15)), 90, (1.0, 0.72, 0.4), size=0.08, collection=col)
+        out['lantern'] = kit.add_light('POINT', 'Lantern_Light', (0.49, -2.15, 1.82 + _gh(1.15, -2.15)), 220, (1.0, 0.72, 0.4), size=0.08, collection=col)
         for i, x in enumerate((-1.2, 1.2)):
-            out['win%d' % i] = kit.add_light('POINT', 'Window_Light.%d' % i, (x, -1.9, 1.5), 40, (1.0, 0.66, 0.32), size=0.1, collection=col)
+            out['win%d' % i] = kit.add_light('POINT', 'Window_Light.%d' % i, (x, -1.9, 1.5), 110, (1.0, 0.66, 0.32), size=0.1, collection=col)
     return out
 
 
 def build_camera(lens=36.0, dof=True, collection=None):
-    cam = kit.add_camera('Camera', (8.4, -10.6, 4.1), (0.2, 0.0, 1.45), lens, collection or get_collection('Lights'))
+    cam = kit.add_camera('Camera', (8.6, -10.8, 2.7), (0.2, 0.0, 1.5), lens, collection or get_collection('Lights'))
     if dof:
         d = cam.data.dof
         d.use_dof = True

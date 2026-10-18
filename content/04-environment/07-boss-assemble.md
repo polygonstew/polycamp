@@ -28,7 +28,7 @@ What a good diorama does:
 - **Nothing floating, nothing buried.** Every part sits on the ground surface.
 
 :::goal img=diorama-blockout.png
-A suggested arrangement, rendered without lights. Yours can differ as long as it holds together.
+A suggested arrangement in plain grey. Yours can differ as long as it holds together.
 :::
 
 :::task id=cabin title="The cabin on the ground" xp=15
