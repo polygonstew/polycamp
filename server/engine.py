@@ -177,7 +177,7 @@ class Engine:
         hints = {r["task"]: r["level"] for r in q("SELECT * FROM hints WHERE task LIKE ?", (lid + "/%",))}
         nxt = self.content.next_after(lid)
         pub["state"] = {"done": rows, "completed": bool(les_row and les_row["completed"]), "hints": hints,
-                        "solution": bool(les_row and les_row["solution"]), "has_solution": bool(les.solve),
+                        "solution": bool(les_row and les_row["solution"]), "has_solution": les.has_solution(),
                         "active": bool(self.run and self.run["lesson"] == lid),
                         "next": nxt.id if nxt else None, "next_title": nxt.title if nxt else None,
                         "live": self.run["live"] if self.run and self.run["lesson"] == lid else {}}
@@ -372,7 +372,7 @@ class Engine:
     def solution(self, run=False, cid=None):
         with self.lock:
             les = self._active()
-            if not les.solve:
+            if not les.has_solution():
                 return {"error": "This lesson has no solution script."}
             row = q("SELECT solution, completed FROM lessons WHERE id=?", (les.id,), one=True)
             free = bool(row and (row["solution"] or row["completed"]))
@@ -382,7 +382,7 @@ class Engine:
                 self.award(0, -SOLUTION_COST, "solution", les.id, "peek")
             q("UPDATE lessons SET solution=1 WHERE id=?", (les.id,))
             self.set_flag("peeked")
-        out = {"code": les.solve, "cost": 0 if free else SOLUTION_COST}
+        out = {"code": les.solution_text(), "cost": 0 if free else SOLUTION_COST}
         if run:
             r = self.bridge.command("run_script", {"code": self.content.solve_script(les), "label": les.id + "-solution"},
                                     cid, wait=40)

@@ -1,0 +1,10 @@
+# A flat 24 x 24 grid, ready to be pulled into a hill.
+cube, light, cam = kit.default_scene()
+bpy.data.objects.remove(cube, do_unlink=True)
+bm = bmesh.new()
+kit.add_grid(bm, 8.0, 24)
+ob = kit.mesh_object('Hill', bm, collection=bpy.context.scene.collection.children['Collection'])
+ob.data.materials.append(kit.pbr('Hill', (0.35, 0.55, 0.3, 1)))
+kit.select_only(ob)
+cam.location = (9, -9, 6)
+kit.look_at(cam, (0, 0, 0.8))

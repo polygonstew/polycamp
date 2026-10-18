@@ -115,6 +115,17 @@ def _mesh_stats(me):
     return d
 
 
+def _volume(me):
+    """Enclosed volume of a closed mesh (m^3), through bmesh. Used by 'is it really hollow?' style checks."""
+    import bmesh
+    bm = bmesh.new()
+    try:
+        bm.from_mesh(me)
+        return abs(bm.calc_volume(signed=True))
+    finally:
+        bm.free()
+
+
 def _uv_stats(me):
     """UV layout facts for the active UV map: area used in 0..1 and how much lies outside."""
     np = _np()
@@ -241,6 +252,7 @@ def _object(obj, scene, view_layer, deps, active, sel_names):
         "sel": obj.name in sel_names, "active": obj is active,
         "hide": bool(obj.hide_viewport), "hide_render": bool(obj.hide_render),
         "instance": obj.instance_type if obj.instance_type != "NONE" else None,
+        "display": obj.display_type,
     }
     try:
         d["hidden"] = bool(obj.hide_get(view_layer=view_layer))
@@ -277,6 +289,11 @@ def _object(obj, scene, view_layer, deps, active, sel_names):
             d["in_edit"] = True
         else:
             d.update(_mesh_stats(me))
+            if d.get("boundary_edges") == 0 and d["faces"] < 20000:
+                try:
+                    d["volume"] = _r(_volume(me))
+                except Exception:
+                    pass
         d["uv"] = [u.name for u in me.uv_layers]
         if not d.get("in_edit"):
             d.update(_uv_stats(me))

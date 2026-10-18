@@ -1,0 +1,11 @@
+# A flat 6x6 panel made entirely of triangles. The topology lesson turns it back into quads.
+cube, light, cam = kit.default_scene()
+bpy.data.objects.remove(cube, do_unlink=True)
+bm = bmesh.new()
+kit.add_grid(bm, 5.0, 6)
+bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='FIXED')
+ob = kit.mesh_object('Panel', bm, collection=bpy.context.scene.collection.children['Collection'])
+ob.data.materials.append(kit.pbr('Panel', (0.55, 0.62, 0.7, 1)))
+kit.select_only(ob)
+cam.location = (0, -7.5, 6.5)
+kit.look_at(cam, (0, 0, 0))

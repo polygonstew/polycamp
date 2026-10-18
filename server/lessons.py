@@ -77,6 +77,7 @@ class Lesson:
         self.blocks, self.priv, self.errors = [], {}, []
         self.task_ids, self.quiz_ids = [], []
         self.solve = ""
+        self.solves = {}
         self._parse(body)
         self.xp_bonus = _int(meta.get("xp"), 25 + (50 if self.boss else 0))
 
@@ -132,7 +133,10 @@ class Lesson:
         elif name == "img":
             self.blocks.append({"t": "img", "src": kw.get("src", ""), "caption": text})
         elif name == "solve":
-            self.solve = text
+            if "task" in kw:                                  # per-task solution, run in task order
+                self.solves[self.id + "/" + kw["task"]] = text
+            else:
+                self.solve = text
         elif name == "task":
             self._task(pos, kw, inner)
         elif name in ("quiz", "order", "match", "fill", "keys"):
@@ -235,6 +239,15 @@ class Lesson:
         self.blocks.append(b)
 
     # ---- views -------------------------------------------------------------
+    def solution_text(self):
+        """What 'Peek at the solution' shows: the whole-lesson script, or the per-task ones in order."""
+        if self.solve:
+            return self.solve
+        return "\n\n".join("# task: %s\n%s" % (b["title"], self.solves[b["id"]]) for b in self.tasks() if b["id"] in self.solves)
+
+    def has_solution(self):
+        return bool(self.solve or self.solves)
+
     def tasks(self):
         return [b for b in self.blocks if b["t"] == "task"]
 
@@ -349,5 +362,7 @@ class Content:
             return self.lib_text() + "\n" + body
         return None
 
-    def solve_script(self, les):
-        return (self.lib_text() + "\n" + les.solve) if les.solve else None
+    def solve_script(self, les, task=None):
+        """Python that solves the lesson (or just one task when per-task solutions exist)."""
+        text = les.solves.get(task) if task else les.solution_text()
+        return (self.lib_text() + "\n" + text) if text else None

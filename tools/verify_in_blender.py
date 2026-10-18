@@ -70,16 +70,33 @@ for les in content.ordered_lessons():
             priv = les.priv[tid]
             if all(ok for _, ok, _ in res) and not priv["allow_initial"]:
                 warns.append((les.id, "task %s already satisfied before the solution" % tid))
-        if not les.solve:
+        if not les.has_solution():
             if any(les.priv[b["id"]]["checks"] and not les.priv[b["id"]]["untested"] for b in les.tasks()):
                 fails.append((les.id, "has checks but no :::solve"))
             continue
-        r = commands.run({"id": 2, "cmd": "run_script", "args": {"code": content.solve_script(les), "label": les.id + "-solve"}})
-        if not r["ok"]:
-            fails.append((les.id, "solve script failed: " + r["msg"]))
-            continue
-        after, snap1 = evaluate(les, base)
-        bad = [(tid, lbl, expr) for tid, res in after.items() for lbl, ok, expr in res if not ok]
+        bad, after, failed_run = [], {}, False
+        if les.solve:                                   # one script solves everything, then all checks must hold
+            r = commands.run({"id": 2, "cmd": "run_script", "args": {"code": content.solve_script(les), "label": les.id + "-solve"}})
+            if not r["ok"]:
+                fails.append((les.id, "solve script failed: " + r["msg"]))
+                continue
+            after, snap1 = evaluate(les, base)
+            bad = [(tid, lbl, expr) for tid, res in after.items() for lbl, ok, expr in res if not ok]
+        else:                                           # per-task scripts: run, then that task's checks must hold right now
+            for blk in les.tasks():
+                tid = blk["id"]
+                if tid in les.solves:
+                    r = commands.run({"id": 2, "cmd": "run_script", "args": {"code": content.solve_script(les, tid), "label": tid}})
+                    if not r["ok"]:
+                        fails.append((les.id, "solve for %s failed: %s" % (tid, r["msg"])))
+                        failed_run = True
+                        break
+                res, snap1 = evaluate(les, base)
+                if tid in res:
+                    after[tid] = res[tid]
+                    bad += [(tid, lbl, expr) for lbl, ok, expr in res[tid] if not ok]
+            if failed_run:
+                continue
         if snap1.get("errors"):
             bad.append(("snapshot", "errors", str(snap1["errors"][:2])))
         if bad:

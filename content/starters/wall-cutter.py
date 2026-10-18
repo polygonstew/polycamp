@@ -1,0 +1,16 @@
+# A wall slab and a cylinder lying in it, to cut a round window with a Boolean.
+cube, light, cam = kit.default_scene()
+bpy.data.objects.remove(cube, do_unlink=True)
+col = bpy.context.scene.collection.children['Collection']
+bm = bmesh.new()
+box_at(bm, (4.0, 0.3, 2.6), (0, 0, 1.3))
+wall = kit.mesh_object('Wall', bm, collection=col)
+wall.data.materials.append(mat_wood('Wall_Wood'))
+bm = bmesh.new()
+v = kit.add_cylinder(bm, 0.55, 1.0, 32)
+bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=Euler((math.pi / 2, 0, 0)).to_matrix(), verts=v)
+cutter = kit.mesh_object('Cutter', bm, collection=col, loc=(0.6, 0, 1.5))
+cutter.data.materials.append(kit.pbr('Cutter', (0.9, 0.2, 0.2, 1)))
+kit.select_only(wall)
+cam.location = (3.5, -7, 3)
+kit.look_at(cam, (0, 0, 1.3))
