@@ -118,6 +118,21 @@ class POLYCAMP_OT_send_render(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class POLYCAMP_OT_export_model(bpy.types.Operator):
+    bl_idname = "polycamp.export_model"
+    bl_label = "Export to Godot / Kiln"
+    bl_description = "Export the selected objects as glTF (.glb) and let Polycamp copy it into your Godot or Kiln folder"
+
+    selected_only: BoolProperty(name="Selected only", default=True)
+
+    def execute(self, context):
+        from . import commands
+        name = bpy.path.display_name_from_filepath(bpy.data.filepath) or "polycamp-model"
+        r = commands.run({"cmd": "export_model", "args": {"name": name, "selected_only": self.selected_only}})
+        self.report({"INFO"} if r["ok"] else {"WARNING"}, r["msg"])
+        return {"FINISHED"}
+
+
 class POLYCAMP_OT_overlay(bpy.types.Operator):
     bl_idname = "polycamp.overlay"
     bl_label = "Toggle task overlay"
@@ -185,6 +200,7 @@ class POLYCAMP_PT_main(bpy.types.Panel):
         col.operator("polycamp.open_app", icon="URL")
         col.operator("polycamp.cpu_preset", icon="SETTINGS").quality = "standard"
         col.operator("polycamp.send_render", icon="RENDER_STILL")
+        col.operator("polycamp.export_model", icon="EXPORT")
         col.operator("polycamp.overlay", icon="WINDOW")
 
 
@@ -230,7 +246,8 @@ def _draw_overlay():
 
 
 CLASSES = (POLYCAMP_Prefs, POLYCAMP_OT_open_app, POLYCAMP_OT_reconnect, POLYCAMP_OT_hint, POLYCAMP_OT_prep,
-           POLYCAMP_OT_cpu_preset, POLYCAMP_OT_send_render, POLYCAMP_OT_overlay, POLYCAMP_PT_main)
+           POLYCAMP_OT_cpu_preset, POLYCAMP_OT_send_render, POLYCAMP_OT_export_model, POLYCAMP_OT_overlay,
+           POLYCAMP_PT_main)
 
 
 def register():

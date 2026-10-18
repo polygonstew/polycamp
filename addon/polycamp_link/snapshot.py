@@ -434,7 +434,7 @@ def _images(snap):
             continue
         out.append({"name": im.name, "w": im.size[0], "h": im.size[1], "source": im.source,
                     "path": im.filepath, "colorspace": im.colorspace_settings.name,
-                    "users": im.users, "packed": im.packed_file is not None,
+                    "users": im.users, "packed": im.packed_file is not None, "dirty": bool(im.is_dirty),
                     "generated": im.source == "GENERATED"})
     snap["images"] = out[:80]
 

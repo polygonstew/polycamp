@@ -1,0 +1,12 @@
+# A plain crate with no UV map at all.
+kit.wipe()
+kit.reset_scene_settings()
+kit.make_world((0.12, 0.13, 0.16, 1), 1.0)
+bm = bmesh.new()
+box_at(bm, (1.6, 1.6, 1.6), (0, 0, 0.8))
+crate = kit.mesh_object('Crate', bm, collection=get_collection('Props'))
+crate.data.materials.append(kit.pbr('Crate', (0.6, 0.45, 0.3, 1), roughness=0.7))
+kit.add_light('AREA', 'Key', (3, -4, 5), 400, (1, 0.95, 0.9), size=3, collection=get_collection('Lights'))
+kit.look_at(bpy.data.objects['Key'], (0, 0, 0.8))
+kit.add_camera('Camera', (3.4, -4.2, 2.6), (0, 0, 0.8), 40, get_collection('Lights'))
+kit.select_only(crate)

@@ -146,7 +146,7 @@ check("run_script", r["ok"] and bpy.context.scene.get("pc_test") == "add_box", r
 try:
     icons = {i.identifier for i in bpy.types.UILayout.bl_rna.functions["label"].parameters["icon"].enum_items}
     need = {"CHECKMARK", "ERROR", "BOOKMARKS", "BLANK1", "CHECKBOX_HLT", "CHECKBOX_DEHLT", "QUESTION", "FILE_NEW",
-            "URL", "SETTINGS", "RENDER_STILL", "WINDOW", "FILE_REFRESH"}
+            "URL", "SETTINGS", "RENDER_STILL", "WINDOW", "FILE_REFRESH", "EXPORT"}
     check("panel icons exist", need <= icons, sorted(need - icons))
 except Exception as e:
     print("SKIP icon check", e)

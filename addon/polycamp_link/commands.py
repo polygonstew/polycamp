@@ -182,7 +182,8 @@ def _fetch_images(files):
     for kind, spath in files.items():
         if not spath:
             continue
-        dest = os.path.join(link.CACHE, "tex", os.path.basename(spath))
+        parts = spath.rstrip("/").split("/")[-2:]            # keep <set>/<map>.png so two sets never overwrite each other
+        dest = os.path.join(link.CACHE, "tex", *parts)
         out[kind] = link.download(spath, dest)
     return out
 

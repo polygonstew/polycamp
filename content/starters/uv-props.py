@@ -1,0 +1,25 @@
+# Three props with good UVs and plain grey materials: Barrel, Crate and Plank.
+kit.wipe()
+kit.reset_scene_settings()
+kit.make_world((0.12, 0.13, 0.16, 1), 1.0)
+col = get_collection('Props')
+grey = lambda n: kit.pbr(n, (0.6, 0.6, 0.6, 1), roughness=0.7)
+build_barrel('Barrel', (-2.2, 0, 0), col, uv=True, mat=grey('Barrel_Mat'))
+bm = bmesh.new()
+box_at(bm, (1.2, 1.2, 1.2), (0, 0, 0.6))
+uv_cross_cube = kit.uv_cross_cube
+uv_cross_cube(bm)
+crate = kit.mesh_object('Crate', bm, collection=col)
+crate.data.materials.append(grey('Crate_Mat'))
+bm = bmesh.new()
+kit.add_grid(bm, 1.8, 1)
+uvl = bm.loops.layers.uv.verify()
+for f in bm.faces:
+    for lp in f.loops:
+        lp[uvl].uv = (lp.vert.co.x / 1.8 + 0.5, lp.vert.co.y / 1.8 + 0.5)
+plank = kit.mesh_object('Plank', bm, collection=col, loc=(2.4, 0, 0.9), rot_deg=(90, 0, 0))
+plank.data.materials.append(grey('Plank_Mat'))
+kit.add_light('AREA', 'Key', (2, -5, 5), 500, (1, 0.95, 0.9), size=4, collection=get_collection('Lights'))
+kit.look_at(bpy.data.objects['Key'], (0, 0, 0.6))
+kit.add_camera('Camera', (0, -7.5, 2.4), (0, 0, 0.7), 40, get_collection('Lights'))
+kit.select_only(bpy.data.objects['Barrel'])
