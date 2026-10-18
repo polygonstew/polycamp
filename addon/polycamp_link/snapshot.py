@@ -489,7 +489,8 @@ def _scene(snap, scene):
         "name": scene.name, "camera": scene.camera.name if scene.camera else None,
         "unit_system": scene.unit_settings.system, "unit_scale": _r(scene.unit_settings.scale_length, 4),
         "markers": len(scene.timeline_markers), "gravity": _vec(scene.gravity, 2),
-        "rigidbody": scene.rigidbody_world is not None,
+        "rigidbody": scene.rigidbody_world is not None, "cursor": _vec(scene.cursor.location),
+        "frame": scene.frame_current,
         "comp_nodes": sorted({n.type for n in tree.nodes}) if comp_on and tree is not None else [],
         "collections": _collections(scene.collection),
     }

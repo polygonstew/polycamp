@@ -56,6 +56,14 @@ def _ctx_override(kind="VIEW_3D"):
     return bpy.context.temp_override(window=win, area=area, region=region)
 
 
+def _mark_dirty(label="Polycamp"):
+    """Script changes don't flag the file as modified; an undo push does (so 'saved' checks mean 'saved after this')."""
+    try:
+        bpy.ops.ed.undo_push(message=label)
+    except Exception:
+        pass
+
+
 def backup_if_needed(reason="before lesson"):
     """Never lose the learner's work: save a copy of an unsaved/dirty session before wiping it."""
     if not bpy.data.is_dirty:
@@ -88,6 +96,7 @@ def _new_scene(a):
         scenekit.make_world()
     else:
         scenekit.default_scene()
+    _mark_dirty("Polycamp: fresh scene")
     return {"_msg": "Fresh scene ready." + (" Your previous work was saved to %s" % kept if kept else ""),
             "backup": kept}
 
@@ -97,11 +106,20 @@ def _run_script(a):
     p = _prefs()
     if p is not None and not p.allow_scripts:
         raise RuntimeError("Lesson scripts are switched off in the Polycamp Link preferences.")
+    from . import link
     kept = backup_if_needed() if a.get("backup") else None
     ns = {"bpy": bpy, "bmesh": bmesh, "math": math, "mathutils": mathutils, "Vector": mathutils.Vector,
           "Matrix": mathutils.Matrix, "Euler": mathutils.Euler, "kit": scenekit, "matkit": matkit,
-          "compat": compat, "__name__": "polycamp_script"}
-    exec(compile(a["code"], "<polycamp:%s>" % a.get("label", "script"), "exec"), ns)
+          "compat": compat, "note_op": link.count_op, "__name__": "polycamp_script"}
+    saved = []
+    mark = lambda *_: saved.append(1)
+    bpy.app.handlers.save_post.append(mark)
+    try:
+        exec(compile(a["code"], "<polycamp:%s>" % a.get("label", "script"), "exec"), ns)
+    finally:
+        bpy.app.handlers.save_post.remove(mark)
+    if not saved:                          # a script that saved the file must leave it clean
+        _mark_dirty("Polycamp: " + a.get("label", "script"))
     return {"_msg": "Script '%s' ran." % a.get("label", "script"), "backup": kept}
 
 

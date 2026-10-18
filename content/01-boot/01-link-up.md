@@ -63,10 +63,10 @@ hint: Hover over the viewport, select the cube, press F2, type the name, Enter.
 hint: Or double-click the name in the Outliner (top right list).
 :::
 
-:::task id=save title="Save the file" xp=15
+:::task id=save title="Save the file" xp=15 untested
 Names mean nothing if Blender crashes. Press [[Ctrl+S]] and save as `polycamp-first.blend` somewhere you
 will find it again.
-check: file.saved and file.name != '' :: The file has been saved
+check: file.saved and not file.dirty :: The file is saved, with no unsaved changes
 hint: Ctrl+S opens the file browser the first time. Type a name at the bottom and press Save.
 :::
 
@@ -86,5 +86,5 @@ Whenever a lesson sets up a scene for you, Polycamp first saves a copy of your c
 :::solve
 cube = bpy.data.objects['Cube']
 cube.name = 'Cubby'
-bpy.ops.wm.save_as_mainfile(filepath='/tmp/polycamp-selftest.blend')
+bpy.ops.wm.save_as_mainfile(filepath=bpy.app.tempdir + 'polycamp-first.blend')
 :::

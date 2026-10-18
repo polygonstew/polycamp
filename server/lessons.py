@@ -175,7 +175,8 @@ class Lesson:
         manual = "manual" in pos or "manual" in kw or not chk
         title = kw.get("title") or _plain_title(text)
         self.task_ids.append(tid)
-        self.priv[tid] = {"kind": "task", "checks": chk, "hints": hints, "allow_initial": allow_initial}
+        self.priv[tid] = {"kind": "task", "checks": chk, "hints": hints, "allow_initial": allow_initial,
+                          "untested": "untested" in pos or "untested" in kw}
         self.blocks.append({"t": "task", "id": tid, "title": title, "text": text, "xp": _int(kw.get("xp"), 20),
                             "labels": [c[1] for c in chk], "nhints": len(hints), "keys": tkeys, "why": why,
                             "manual": manual, "optional": "optional" in pos or "stretch" in pos})
