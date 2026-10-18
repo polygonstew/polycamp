@@ -36,7 +36,7 @@ Resist the pull to polish a detail before the blockout reads well. A beautifully
 - **Save versions** before anything risky. Disk is cheap, regret is not.
 - **Name as you go**, because "later" never arrives.
 - **Apply scale** (Ctrl+A) before modifiers and before exporting.
-- **Check from every angle** (Numpad 1, 3, 7) not just the one you modelled from.
+- **Check from every angle** (Numpad 1, 3, 7), not only the one you modelled from.
 - **Use the Statistics overlay** to watch your face count.
 - **Test render small and often.** A 480 × 270 draft at 16 samples is enough to judge composition and light.
 - **Ask what the camera sees.** Do not model what nobody will ever see.

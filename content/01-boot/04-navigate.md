@@ -9,7 +9,7 @@ tags: viewport
 xp: 25
 ---
 You can already move around a 3D viewport, so this is a speed run. The only goal is to make sure the
-habits that save time are in your hands, not just the basics.
+habits that save time are already in your fingers.
 
 ## The three moves
 

@@ -59,7 +59,7 @@ A painted image lives **only in memory** until you save it. Close Blender withou
 In the Image Editor use **Image > Save** ([[Alt+S]]), or **Image > Pack** to embed it in the `.blend` file. The Image Texture node shows a small warning when an image has unsaved changes.
 
 :::task id=keep title="Save it: pack or save the image" xp=10
-Make sure the painted image is not just in memory: **Image > Pack** (or save it to a file).
+Make sure the painted image is stored somewhere, not only held in memory: **Image > Pack** (or save it to a file).
 check: any(i.w == 1024 and (i.packed or i.path != '') for i in images) :: The 1024 image is packed or saved to disk
 hint: Image editor, Image menu > Pack. Or Image > Save As and choose a folder.
 :::
