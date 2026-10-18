@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 360" font-family="system-ui, sans-serif">
+  <rect width="560" height="360" rx="14" fill="#1b1d22"/>
+  <g stroke="#3a3f47" stroke-width="1" stroke-dasharray="4 5" fill="none">
+    <circle cx="280" cy="170" r="120"/>
+    <line x1="280" y1="40" x2="280" y2="320"/>
+  </g>
+  <!-- subject -->
+  <circle cx="280" cy="170" r="26" fill="#e8832a"/>
+  <polygon points="280,152 296,176 264,176" fill="#1b1d22" opacity=".25"/>
+  <text x="280" y="214" fill="#c9ced6" font-size="13" text-anchor="middle">subject</text>
+  <!-- camera -->
+  <g transform="translate(280 322)">
+    <rect x="-18" y="-12" width="36" height="24" rx="4" fill="#9aa1ab"/>
+    <polygon points="-10,-12 10,-12 0,-24" fill="#9aa1ab"/>
+  </g>
+  <text x="280" y="352" fill="#9aa1ab" font-size="12" text-anchor="middle">camera</text>
+  <!-- key -->
+  <g>
+    <line x1="150" y1="260" x2="258" y2="192" stroke="#ffd08a" stroke-width="3"/>
+    <circle cx="150" cy="260" r="18" fill="#ffd08a"/>
+    <text x="150" y="265" text-anchor="middle" font-size="13" font-weight="700" fill="#1b1d22">K</text>
+    <text x="150" y="294" text-anchor="middle" font-size="12" fill="#ffd08a">key: brightest, 45° up and to one side</text>
+  </g>
+  <!-- fill -->
+  <g>
+    <line x1="420" y1="268" x2="302" y2="194" stroke="#8fb4ff" stroke-width="2"/>
+    <circle cx="420" cy="268" r="14" fill="#8fb4ff"/>
+    <text x="420" y="273" text-anchor="middle" font-size="12" font-weight="700" fill="#1b1d22">F</text>
+    <text x="440" y="296" text-anchor="middle" font-size="12" fill="#8fb4ff">fill: softer, cooler, opposite side</text>
+  </g>
+  <!-- rim -->
+  <g>
+    <line x1="352" y1="46" x2="296" y2="146" stroke="#ff9f6b" stroke-width="2"/>
+    <circle cx="352" cy="46" r="14" fill="#ff9f6b"/>
+    <text x="352" y="51" text-anchor="middle" font-size="12" font-weight="700" fill="#1b1d22">R</text>
+    <text x="352" y="26" text-anchor="middle" font-size="12" fill="#ff9f6b">rim: behind, draws an outline</text>
+  </g>
+  <text x="14" y="22" font-size="13" fill="#9aa1ab">Top-down view</text>
+</svg>
