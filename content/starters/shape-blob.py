@@ -1,0 +1,12 @@
+# A smooth blob to try shape keys on.
+kit.wipe()
+kit.reset_scene_settings()
+kit.make_world((0.1, 0.11, 0.14, 1), 1.0)
+bm = bmesh.new()
+kit.add_icosphere(bm, 1.0, 4)
+blob = kit.mesh_object('Blob', bm, collection=get_collection('Stage'), loc=(0, 0, 1.0), smooth=True)
+blob.data.materials.append(kit.pbr('Blob', (0.3, 0.7, 0.4, 1), roughness=0.4))
+kit.add_light('AREA', 'Key', (2, -5, 5), 500, (1, 0.95, 0.9), size=4, collection=get_collection('Lights'))
+kit.look_at(bpy.data.objects['Key'], (0, 0, 1))
+kit.add_camera('Camera', (0, -6, 2.0), (0, 0, 1.0), 40, get_collection('Lights'))
+kit.select_only(blob)

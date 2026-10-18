@@ -1,0 +1,13 @@
+# The lantern with a point light inside whose power has a single keyframe, ready for a Noise modifier.
+kit.wipe()
+kit.reset_scene_settings()
+kit.make_world((0.01, 0.012, 0.025, 1), 1.0)
+build_lantern((0, 0, 0), get_collection('Lantern'), mats=True, scale=1.4, name='Lantern')
+light = kit.add_light('POINT', 'Flame_Light', (0, 0, 0.3), 120, (1.0, 0.72, 0.4), size=0.06, collection=get_collection('Lantern'))
+light.data.keyframe_insert('energy', frame=1)
+bm = bmesh.new()
+box_at(bm, (9, 6, 0.1), (0, 0, -0.05))
+floor = kit.mesh_object('Floor', bm, collection=get_collection('Ground'))
+floor.data.materials.append(kit.pbr('Floor', (0.3, 0.3, 0.33, 1), roughness=0.8))
+kit.add_camera('Camera', (0.6, -3.4, 1.0), (0.0, 0, 0.55), 40, get_collection('Lights'))
+kit.select_only(light)

@@ -63,3 +63,18 @@ def studio_lights(centre=(0, 0, 1), size=1.0):
 
 def studio_world(top='#46506a', bottom='#14161d'):
     return build_world_dusk(1.0, top, bottom, '#2b3040')
+
+
+def set_video_output(container='MPEG4'):
+    """Render to an MP4-style video. Blender 5 needs Media Type = Video before the FFmpeg format appears."""
+    im = bpy.context.scene.render.image_settings
+    if hasattr(im, 'media_type'):
+        im.media_type = 'VIDEO'
+    im.file_format = 'FFMPEG'
+    ff = bpy.context.scene.render.ffmpeg
+    ff.format = container
+    for k, v in (('codec', 'H264'), ('constant_rate_factor', 'MEDIUM')):
+        try:
+            setattr(ff, k, v)
+        except Exception:
+            pass

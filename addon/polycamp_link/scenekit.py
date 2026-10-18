@@ -47,6 +47,12 @@ def reset_scene_settings(scene=None):
     r.resolution_x, r.resolution_y, r.resolution_percentage = 1920, 1080, 100
     r.film_transparent = False
     r.use_simplify = False
+    try:
+        if hasattr(r.image_settings, "media_type"):          # Blender 5: back to still images before the format
+            r.image_settings.media_type = "IMAGE"
+        r.image_settings.file_format = "PNG"
+    except Exception:
+        pass
     r.fps = 24
     scene.frame_start, scene.frame_end, scene.frame_current = 1, 250, 1
     scene.camera = None
