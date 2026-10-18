@@ -64,7 +64,7 @@ hint: Segments 2 gives each bevelled edge a middle vertex, which the subdivision
 ob = bpy.context.active_object or bpy.data.objects['Cube']
 b = ob.modifiers.new('Bevel', 'BEVEL')
 b.width, b.segments = 0.1, 2
-ob.modifiers.move(len(ob.modifiers) - 1, 0)
+modifier_to_front(ob, b)
 :::
 
 ## Switches, and making it permanent

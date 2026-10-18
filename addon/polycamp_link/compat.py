@@ -74,10 +74,25 @@ def comp_tree(scene):
     return t
 
 
-def iter_fcurves(action):
-    """F-curves of an action in every API generation (legacy <=4.5, layered 4.4+, 5.x only layered)."""
+def iter_fcurves(action, anim_data=None):
+    """F-curves of an action in every API generation (legacy <=4.5, layered 4.4+, 5.x only layered).
+
+    With 4.4+ slotted actions, pass the owner's animation_data so only the curves of its own slot come back
+    (an object and its data can share one Action in different slots)."""
     if action is None:
         return
+    slot = getattr(anim_data, "action_slot", None) if anim_data is not None else None
+    if slot is not None:
+        try:
+            for layer in action.layers:
+                for strip in layer.strips:
+                    cb = strip.channelbag(slot)
+                    if cb is not None:
+                        for f in cb.fcurves:
+                            yield f
+            return
+        except Exception:
+            pass
     try:
         for f in action.fcurves:
             yield f

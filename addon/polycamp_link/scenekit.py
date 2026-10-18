@@ -56,6 +56,14 @@ def reset_scene_settings(scene=None):
     r.fps = 24
     scene.frame_start, scene.frame_end, scene.frame_current = 1, 250, 1
     scene.camera = None
+    try:                                                      # compositor leftovers from an earlier scene (<= 4.5 keeps the tree)
+        tree = getattr(scene, "node_tree", None)
+        if tree is not None:
+            tree.nodes.clear()
+        if hasattr(scene, "use_nodes"):
+            scene.use_nodes = False
+    except Exception:
+        pass
     scene.use_gravity = True
     scene.unit_settings.system = "METRIC"
     scene.unit_settings.scale_length = 1.0

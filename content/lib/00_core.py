@@ -280,3 +280,12 @@ def mat_plain(name, color, rough=0.6, metal=0.0):
         compat.sock(b, 'metallic').default_value = metal
         m.diffuse_color = srgb(color)
     return m
+
+
+def modifier_to_front(ob, mod):
+    """Move a modifier to the top of the stack on every Blender version (3.3 has no modifiers.move)."""
+    try:
+        ob.modifiers.move(list(ob.modifiers).index(mod), 0)
+    except AttributeError:
+        with bpy.context.temp_override(object=ob, active_object=ob):
+            bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)

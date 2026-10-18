@@ -184,7 +184,7 @@ def _anim(owner, prefix=""):
         return out
     out["action"] = act.name
     frames, interp, fmods = set(), set(), set()
-    for fc in compat.iter_fcurves(act):
+    for fc in compat.iter_fcurves(act, ad):
         path = prefix + fc.data_path
         out["paths"][path] = out["paths"].get(path, 0) + len(fc.keyframe_points)
         out["keys"] += len(fc.keyframe_points)
