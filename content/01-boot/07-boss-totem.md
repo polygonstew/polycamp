@@ -35,7 +35,7 @@ hint: Vertex counts differ per primitive: cube 8, cylinder 64, UV sphere 482, co
 :::task id=tall title="Six metres tall" xp=15
 From the lowest point to the highest point, the pole must be at least **6 m**. Use the sidebar
 Dimensions fields or Statistics to check your sizes.
-check: max(o.world_loc[2] + o.dims[2] / 2 for o in meshes) - min(o.world_loc[2] - o.dims[2] / 2 for o in meshes) >= 6 :: The pole spans 6 m or more in height
+check: max(o.wbox[5] for o in meshes) - min(o.wbox[2] for o in meshes) >= 6 :: The pole spans 6 m or more in height
 hint: Each piece is 2 m tall by default. Five of them stacked is 10 m, so you may need to scale them down.
 :::
 

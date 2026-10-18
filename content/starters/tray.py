@@ -1,0 +1,11 @@
+# A flat 2.4 x 1.4 plate, to turn into a tray with Solidify and Bevel.
+cube, light, cam = kit.default_scene()
+bpy.data.objects.remove(cube, do_unlink=True)
+bm = bmesh.new()
+box_at(bm, (2.4, 1.4, 0.001), (0, 0, 0))
+bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.normal.z < -0.5], context='FACES')
+ob = kit.mesh_object('Tray', bm, collection=bpy.context.scene.collection.children['Collection'])
+ob.data.materials.append(kit.pbr('Tray', (0.7, 0.72, 0.78, 1), roughness=0.35, metallic=0.8))
+kit.select_only(ob)
+cam.location = (3.4, -4.2, 2.6)
+kit.look_at(cam, (0, 0, 0))

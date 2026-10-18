@@ -214,6 +214,7 @@ def build_lantern(loc=(0, 0, 0), collection=None, mats=True, scale=1.0, name='La
     bm = bmesh.new()
     kit.add_icosphere(bm, 0.045, 2, center=(0, 0, 0.17))
     out['flame'] = _put(bm, name + '_Flame', col, mat=flame, smooth=True, parent=root)
+    add_subsurf(out['flame'], 1, 2)
     bm = bmesh.new()
     v = kit.add_cylinder(bm, 0.205, 0.13, 4, center=(0, 0, 0.54), radius2=0.03)
     bmesh.ops.rotate(bm, cent=(0, 0, 0.54), matrix=Euler((0, 0, math.pi / 4)).to_matrix(), verts=v)

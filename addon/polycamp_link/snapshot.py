@@ -8,6 +8,7 @@ import math
 import platform
 
 import bpy
+from mathutils import Vector
 
 from . import compat
 
@@ -260,6 +261,10 @@ def _object(obj, scene, view_layer, deps, active, sel_names):
         d["hidden"] = False
     try:
         d["world_loc"] = _vec(obj.matrix_world.translation)
+        if obj.type in ("MESH", "CURVE", "SURFACE", "FONT", "META"):
+            mw = obj.matrix_world
+            cs = [mw @ Vector(c) for c in obj.bound_box]
+            d["wbox"] = [_r(min(c[i] for c in cs), 3) for i in range(3)] + [_r(max(c[i] for c in cs), 3) for i in range(3)]
     except Exception:
         pass
     d["mods"] = []
