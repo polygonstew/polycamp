@@ -27,8 +27,11 @@ export function comboFromEvent(e) {
 
 export const norm = s => s.split('+').map(x => x.trim().toLowerCase()).sort().join('+');
 export function matches(expected, got) {
-  // "Shift+A or Ctrl+Space" -> any alternative; '+' inside names ("Numpad +") is kept intact
-  return expected.split(/\s+or\s+/i).some(alt => {
+  // "Shift+A or Ctrl+Space" -> any alternative; '+' inside names ("Numpad +") is kept intact.
+  // "Numpad 1" also accepts the number row key: that is what Blender's Emulate Numpad setting does for laptops.
+  const alts = expected.split(/\s+or\s+/i);
+  for (const a of [...alts]) { const m = /^Numpad ([\d.])$/.exec(a); if (m) alts.push(m[1]); }
+  return alts.some(alt => {
     const a = alt.replace('Numpad +', 'Numpad_plus');
     return norm(a) === norm(got.replace('Numpad +', 'Numpad_plus'));
   });

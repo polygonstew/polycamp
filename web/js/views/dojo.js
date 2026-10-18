@@ -53,7 +53,7 @@ export default async function (root) {
       clear(arena);
       const bar = h('div', { class: 'bar timer' }, h('i', { style: { width: '100%', transition: speed ? 'width 6s linear' : 'none' } }));
       arena.append(h('div', { class: 'combo' }, combo > 1 ? `x${combo}` : ''), h('div', { class: 'faint' }, `${c.deck} · ${i + 1}/${cards.length}`),
-        h('div', { class: 'q' }, c.action), h('div', { class: 'tip' }, c.tip || ''), h('div', { class: 'got' }, 'press the keys…'), speed ? bar : null);
+        h('div', { class: 'q' }, c.action), h('div', { class: 'tip' }, c.tip || ''), h('div', { class: 'got' }, 'press the keys…'), ...(speed ? [bar] : []));
       if (speed) { requestAnimationFrame(() => requestAnimationFrame(() => { bar.firstChild.style.width = '0%'; })); timer = setTimeout(() => answer(null), 6000); }
     };
     const answer = async (got) => {
