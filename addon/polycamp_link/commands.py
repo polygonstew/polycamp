@@ -87,6 +87,17 @@ def _ping(a):
     return {"pong": True, "blender": bpy.app.version_string}
 
 
+@reg("cue")
+def _cue(a):
+    """Highlight things on screen while the narration talks about them (cues.py). An empty list clears."""
+    from . import cues
+    p = _prefs()
+    if p is not None and not p.cues:
+        return {"_msg": "highlights are switched off in the add-on preferences"}
+    n = cues.set_cues(a.get("cues") or [], a.get("ttl", 8), tabs=bool(p is not None and p.cue_tabs))
+    return {"_msg": "%d cue(s)" % n}
+
+
 @reg("new_scene")
 def _new_scene(a):
     kept = backup_if_needed() if a.get("backup", True) else None

@@ -7,6 +7,7 @@ import { WIDGETS } from '../widgets.js';
 import { mountMission } from '../mission.js';
 import { keycaps } from '../md.js';
 import { icon } from '../icons.js';
+import { mountPlayer, currentSegment } from '../voice.js';
 
 export function verMatch(spec, major) {
   if (!spec || spec === 'any') return true;
@@ -33,6 +34,7 @@ export default async function (root, [lid]) {
   const prev = seq[idx - 1], next = seq[idx + 1];
 
   const body = h('div', { class: 'body' });
+  const narrHost = h('div', { class: 'narr-host' });
   const missionEl = h('aside', { id: 'mission' });
   root.append(h('div', { class: 'lesson' }, body, missionEl));
   let major = blenderMajor();
@@ -46,7 +48,8 @@ export default async function (root, [lid]) {
         h('div', { class: 'meta' }, les.boss && h('span', { class: 'pill boss' }, 'Boss'), h('span', { class: 'pill' }, les.minutes + ' min'),
           h('span', { class: 'pill acc' }, S.overview.worlds.flatMap(w => w.lessons).find(l => l.id === lid).xp + ' XP'),
           st.completed && h('span', { class: 'pill', style: { color: 'var(--good)', borderColor: 'var(--good)' } }, 'Completed'),
-          h('span', { class: 'pill' }, `Blender ${major}.x notes`))));
+          h('span', { class: 'pill' }, `Blender ${major}.x notes`))),
+      narrHost);
     if (les.scene !== 'keep') {
       body.append(h('div', { class: 'setup-bar' }, h('span', { html: icon('cube', 20) }),
         h('div', { class: 'grow' }, h('b', {}, 'This lesson starts from a prepared scene. '),
@@ -58,10 +61,29 @@ export default async function (root, [lid]) {
           toast(r.msg || r.error, r.ok === false || r.error ? 'bad' : 'good', 5000);
         } }, 'Set up scene in Blender')));
     }
-    for (const b of les.blocks) { const el = renderBlock(b); if (el) body.append(el); }
+    les.blocks.forEach((b, bi) => { const el = renderBlock(b); if (el) { el.dataset.b = bi; body.append(el); } });
     body.append(footer());
     refreshCards();
+    highlight(currentSegment());
   };
+
+  // the narrator tells us which part of the page it is reading; mark it and keep it in view
+  function highlight(seg) {
+    $$('.speaking', body).forEach(e => e.classList.remove('speaking'));
+    if (!seg) return;
+    let els = [];
+    if (seg.b != null) {
+      const blk = body.querySelector(`[data-b="${seg.b}"]`);
+      if (blk) els = seg.u && blk.classList.contains('md') && blk.children.length > seg.u[1] ? [...blk.children].slice(seg.u[0], seg.u[1] + 1) : [blk];
+    } else {
+      const sel = { intro: '.head', setup: '.setup-bar', outro: '.body > .card:last-child' }[seg.kind];
+      const el = sel && $(sel, body);
+      if (el) els = [el];
+    }
+    els.forEach(e => e.classList.add('speaking'));
+    const r = els[0] && els[0].getBoundingClientRect();
+    if (r && (r.top < 130 || r.bottom > innerHeight - 90)) els[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   function renderBlock(b) {
     switch (b.t) {
@@ -113,6 +135,7 @@ export default async function (root, [lid]) {
   }
 
   build();
+  const unPlayer = mountPlayer(narrHost, { lid, highlight });
   const mission = mountMission(missionEl, { lesson: les, hasSolution: () => (S.overview && les.blocks) && (started.state || les.state).has_solution });
   const offs = [
     on('live', () => {
@@ -129,5 +152,5 @@ export default async function (root, [lid]) {
     }),
     on('lesson_done', m => { if (m.lesson === lid) { st.completed = true; refreshState(); } }),
   ];
-  return () => { offs.forEach(f => f()); mission.off(); };
+  return () => { offs.forEach(f => f()); mission.off(); unPlayer(); };
 }

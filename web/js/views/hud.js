@@ -2,11 +2,12 @@
 import { h, clear } from '../ui.js';
 import { S, api, on } from '../api.js';
 import { mountMission } from '../mission.js';
+import { mountPlayer } from '../voice.js';
 
 export default async function (root) {
   const wrap = h('div');
   root.append(wrap);
-  let mission = null, curId = null;
+  let mission = null, curId = null, unPlayer = null;
   const ctx = { lesson: null, hasSolution: () => false, refresh: () => mission && mission.refresh() };
 
   async function sync() {
@@ -15,6 +16,7 @@ export default async function (root) {
     if (id === curId && mission) return;
     curId = id;
     if (mission) mission.off();
+    if (unPlayer) { unPlayer(); unPlayer = null; }
     clear(wrap);
     if (!id) {
       wrap.append(h('div', { class: 'card' }, h('h3', { style: { marginTop: 0 } }, 'No lesson open'), h('p', { class: 'dim' }, 'Pick a lesson in the main Polycamp window and its tasks show up here.')));
@@ -28,11 +30,13 @@ export default async function (root) {
     wrap.append(
       h('div', { class: 'row', style: { marginBottom: '8px' } }, h('b', { class: 'grow' }, les.title), h('a', { class: 'btn sm', href: '#/lesson/' + id, target: '_blank' }, 'open')),
       h('div', { class: 'bar', style: { marginBottom: '10px' }, title: lv.title }, h('i', { style: { width: lv.pct + '%' } })));
+    const narr = h('div', { class: 'narr-host' });
     const m = h('aside', { id: 'mission' });
-    wrap.append(m);
+    wrap.append(narr, m);
+    unPlayer = mountPlayer(narr, { lid: id, compact: true });
     mission = mountMission(m, ctx);
   }
   await sync();
   const off = on('live', sync);
-  return () => { off(); mission && mission.off(); };
+  return () => { off(); mission && mission.off(); unPlayer && unPlayer(); };
 }

@@ -24,6 +24,7 @@ import config                      # noqa: E402
 import dojo                        # noqa: E402
 import store                       # noqa: E402
 import texlab                      # noqa: E402
+import voice                       # noqa: E402
 from bridge import Bridge          # noqa: E402
 from engine import Engine          # noqa: E402
 from hub import Hub                # noqa: E402
@@ -36,6 +37,7 @@ HUB = Hub()
 BRIDGE = Bridge()
 CONTENT = Content()
 ENGINE = Engine(CONTENT, BRIDGE, HUB)
+VOICE = voice.Voice()
 SAFE = re.compile(r"[^A-Za-z0-9._-]")
 FILE_KINDS = ("renders", "textures", "uv", "models", "shots")
 BLOCKED_CMDS = {"run_script"}          # only the engine may send scripts
@@ -130,6 +132,8 @@ class H(BaseHTTPRequestHandler):
                                        extra={"Content-Disposition": 'attachment; filename="polycamp_link.zip"'})
             if path.startswith("/files/"):
                 return self.serve_data(path[7:])
+            if path.startswith("/voice/"):
+                return self.serve_voice(path[7:])
             if path.startswith("/cimg/"):
                 return self.send_file(config.CONTENT / "img" / SAFE.sub("_", path[6:]))
             rel = path.lstrip("/") or "index.html"
@@ -156,7 +160,90 @@ class H(BaseHTTPRequestHandler):
             return self.send_json({"error": "not found"}, 404)
         self.send_file(f)
 
+    def serve_voice(self, name):
+        """Narration audio (/voice/<key>.ogg) and its timing (/voice/<key>.json). Waits for synthesis if it has to,
+        and understands Range requests, which browsers need for seeking."""
+        m = re.fullmatch(r"([0-9a-f]{16})\.(ogg|wav|json)", name)
+        if not m:
+            return self.send_json({"error": "not found"}, 404)
+        key, ext = m.groups()
+        try:
+            path = VOICE.wait(key, 170)
+        except KeyError:
+            return self.send_json({"error": "unknown segment; reload the lesson"}, 404)
+        if path is None:
+            return self.send_json({"error": VOICE.err or "voice not ready"}, 503)
+        if ext == "json":
+            return self.send_bytes(json.dumps(VOICE.meta(key) or {}).encode(), "application/json")
+        raw = path.read_bytes()
+        ctype = "audio/ogg" if path.suffix == ".ogg" else "audio/wav"
+        rng = re.fullmatch(r"bytes=(\d*)-(\d*)", self.headers.get("Range", "") or "")
+        if rng and (rng.group(1) or rng.group(2)):
+            a = int(rng.group(1)) if rng.group(1) else max(0, len(raw) - int(rng.group(2)))
+            b = int(rng.group(2)) if rng.group(1) and rng.group(2) else len(raw) - 1
+            b = min(b, len(raw) - 1)
+            if a > b:
+                return self.send_bytes(b"", ctype, 416, {"Content-Range": "bytes */%d" % len(raw)})
+            return self.send_bytes(raw[a:b + 1], ctype, 206, {"Content-Range": "bytes %d-%d/%d" % (a, b, len(raw)), "Accept-Ranges": "bytes"})
+        self.send_bytes(raw, ctype, 200, {"Accept-Ranges": "bytes", "Cache-Control": "public, max-age=86400"})
+
     # ---- API ---------------------------------------------------------------
+    def voice_get(self, route, qs):
+        if route == "voice/status":
+            return VOICE.status()
+        if route.startswith("voice/script/"):
+            major = int(qs.get("major") or BRIDGE.blender_major() or 4)
+            sc = VOICE.script(CONTENT, route[13:], major, config.load())
+            if sc is None:
+                return {"error": "no such lesson"}
+            if qs.get("warm") and VOICE.installed():
+                VOICE.warm(sc, int(qs.get("from") or 0))
+            return sc
+        return None
+
+    def voice_post(self, route, data):
+        if route == "voice/ensure":
+            n = 0
+            for k in data.get("keys", [])[:40]:
+                try:
+                    n += VOICE.request(k, int(data.get("prio", 1))) is not None
+                except KeyError:
+                    pass
+            return {"ok": True, "queued": n}
+        if route == "voice/prerender":
+            scope = data.get("scope", "all")
+            ids = [l.id for l in CONTENT.ordered_lessons()]
+            if scope.startswith("world:"):
+                w = CONTENT.by_id.get(scope[6:])
+                ids = list(w.lessons) if w else []
+            elif scope.startswith("lesson:"):
+                ids = [scope[7:]] if scope[7:] in ids else []
+            majors = [int(m) for m in data.get("majors", [3, 4, 5])]
+            n = VOICE.prerender(CONTENT, ids, majors, config.load())
+            return {"ok": True, "queued": n, "lessons": len(ids)}
+        if route == "voice/cancel":
+            return {"ok": True, "cancelled": VOICE.cancel_bulk()}
+        if route == "voice/clear":
+            return {"ok": True, "removed": VOICE.clear()}
+        if route in ("voice/preview", "voice/say"):       # preview a voice / read a hint aloud
+            st = config.load()
+            v = SAFE.sub("", str(data.get("voice") or st["voice_narrator"]))
+            text = str(data.get("text") or "Select the cube, press [[G]] [[X]] `3` [[Enter]], and it slides exactly 3 m along the X axis.")[:500]
+            key = VOICE.say(v, text)
+            return {"ok": bool(key), "key": key}
+        if route == "voice/ctl":                 # transport buttons from the Blender panel / a keymap -> whichever page is playing
+            HUB.publish("voice_ctl", action=str(data.get("action", "")), pid=data.get("pid"))
+            return {"ok": True}
+        if route == "voice/cue":                 # highlight something in Blender
+            if not config.load().get("voice_cues", True) and data.get("cues"):
+                return {"ok": True, "skipped": "cues are off"}
+            try:
+                BRIDGE.command("cue", {"cues": data.get("cues", []), "ttl": float(data.get("ttl", 8)), "src": data.get("src", "")})
+            except RuntimeError as e:
+                return {"ok": False, "error": str(e)}
+            return {"ok": True}
+        return None
+
     def api(self, method, route, qs):
         if route == "events":
             return self.sse()
@@ -194,6 +281,8 @@ class H(BaseHTTPRequestHandler):
             return {"snapshot": BRIDGE.snapshot(), "summary": ENGINE.scene_summary()}
         if route == "cheatsheet":
             return {"decks": dojo.load()}
+        if route.startswith("voice/"):
+            return self.voice_get(route, qs)
         return texlab.get(route, qs, ENGINE, BRIDGE)
 
     def api_post(self, route, qs):
@@ -226,6 +315,8 @@ class H(BaseHTTPRequestHandler):
             if route == "trophies/fav":
                 store.q("UPDATE renders SET fav=? WHERE n=?", (int(bool(data.get("fav"))), int(data["n"])))
                 return {"ok": True}
+            if route.startswith("voice/"):
+                return self.voice_post(route, data)
             if route == "reset":
                 if data.get("confirm") == "RESET":
                     ENGINE.reset_progress()

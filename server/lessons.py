@@ -13,7 +13,7 @@ import time
 import checks
 from config import CONTENT
 
-DIRECTIVE = re.compile(r"^(check|hint|keys|why|allow_initial):\s*(.*)$")
+DIRECTIVE = re.compile(r"^(check|hint|keys|why|cue|allow_initial):\s*(.*)$")
 FRONT = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?(.*)\Z", re.S)
 
 
@@ -158,7 +158,7 @@ class Lesson:
                 last = None
                 prose.append(ln)
         text = "\n".join(prose).strip()
-        chk, hints, tkeys, why = [], [], [], ""
+        chk, hints, tkeys, why, cue = [], [], [], "", []
         allow_initial = "allow_initial" in kw or any(d[0] == "allow_initial" for d in directives)
         for kind, val in directives:
             if kind == "check":
@@ -176,13 +176,15 @@ class Lesson:
                 tkeys = [k.strip() for k in val.split(",") if k.strip()]
             elif kind == "why":
                 why = val
+            elif kind == "cue":
+                cue.append(val)
         manual = "manual" in pos or "manual" in kw or not chk
         title = kw.get("title") or _plain_title(text)
         self.task_ids.append(tid)
         self.priv[tid] = {"kind": "task", "checks": chk, "hints": hints, "allow_initial": allow_initial,
                           "untested": "untested" in pos or "untested" in kw}
         self.blocks.append({"t": "task", "id": tid, "title": title, "text": text, "xp": _int(kw.get("xp"), 20),
-                            "labels": [c[1] for c in chk], "nhints": len(hints), "keys": tkeys, "why": why,
+                            "labels": [c[1] for c in chk], "nhints": len(hints), "keys": tkeys, "why": why, "cue": cue,
                             "manual": manual, "optional": "optional" in pos or "stretch" in pos})
 
     def _question(self, name, pos, kw, inner):

@@ -15,7 +15,8 @@
 | `matkit.py` | Material from image maps, and the CPU render presets. |
 | `uvlayout.py` | Draws a UV layout PNG with numpy: teal coverage, red overlap, white edges. |
 | `compat.py` | Every version difference the add-on cares about (Principled socket names, engine ids, compositor tree, slotted actions). |
-| `ui.py` | Preferences, sidebar panel (N > Polycamp), operators, optional in-viewport task overlay. |
+| `ui.py` | Preferences, sidebar panel (N > Polycamp), operators, optional in-viewport task overlay, the Narration buttons and their Ctrl+Shift keys. |
+| `cues.py` | The `cue` command's other half: draw handlers that paint "look here" marks over the editors (outline and tag for an editor or region, boxes on objects, rings at the 3D cursor / origins / gizmo, key caps). Filled quads only, so it works on every GPU backend; clears itself after the cue's time-to-live. |
 
 Renders are caught with `render_complete` handlers and uploaded to the app automatically.
 
@@ -31,6 +32,9 @@ Renders are caught with `render_complete` handlers and uploaded to the app autom
 | `gamify.py` | Levels (scaled so the last level is "finished everything"), rank titles, badges. |
 | `dojo.py` | Flash cards and the Leitner schedule. |
 | `texlab.py` | ComfyUI client (txt2img and img2img, CPU presets), texture sets on disk, send to Blender, Godot / Kiln export with a `StandardMaterial3D` file. |
+| `speech.py` | Lesson -> spoken script: segments (a paragraph, a task, a note) made of sentence chunks with pauses. Rewrites keys, units, acronyms and code for the ear, splits markdown exactly as `web/js/md.js` does (so the page can mark what is being read), and derives highlight cues per sentence. Versioned: changing the rules changes every cache key. |
+| `voice.py` | Narration engine: priority queue (0 needed now, 1 next few, 2 rest of the lesson, 5+ bulk), a content-hash audio cache in `data/voice/`, and a worker process that starts on demand and exits after 10 idle minutes. |
+| `voice_worker.py` | Runs in its own venv (`~/.polycamp/voice`): Kokoro-82M through onnxruntime on 2 threads at low priority. JSON lines in and out. Writes Ogg Vorbis and the start/end time of every sentence. |
 | `store.py`, `config.py`, `hub.py` | SQLite, settings, server-sent-event fan-out. |
 
 ### How a task gets ticked
@@ -45,7 +49,25 @@ Renders are caught with `render_complete` handlers and uploaded to the app autom
 Plain ES modules, hash router, no build. `app.js` boots and owns the top bar and global reactions. `views/*.js` is one file
 per screen. `mission.js` is the live panel (right column, bottom dock or pop-out HUD). `widgets.js` holds the quiz,
 ordering, matching, fill-in and hotkey-drill widgets. `proc.js` is the Texture Lab's pixel engine (tileable noise,
-seamless blend, height / normal / roughness / AO derivation). `icons.js` is the line-icon set.
+seamless blend, height / normal / roughness / AO derivation). `icons.js` is the line-icon set. `voice.js` is the narrator
+(a module singleton, so it carries on from one lesson to the next) and the transport bar.
+
+### Narration
+
+    lesson.md ─ speech.py ─► script (segments, chunks, cues) ─► voice.py queue ─► voice_worker.py ─► data/voice/<key>.ogg + .json
+                                   │                                                                      │
+    browser: voice.js ◄────────────┘   plays the audio, marks the paragraph, fires each sentence's cues as it is spoken
+        │
+        ├─ POST /api/voice/cue ─► bridge command "cue" ─► add-on cues.py draws it in Blender
+        └─ SSE voice_ctl ◄─ POST /api/voice/ctl ◄─ Blender's Narration buttons / Ctrl+Shift keys
+
+- **Coach mode** is a small state machine in `voice.js`: after a task's segment it waits until `task_done` arrives for that task
+  (from the live checks, or a claim), plays a short pre-made "got it" line, then continues. Tasks and quizzes already done are skipped.
+- One page owns playback (the last one you pressed play on). Media keys reach it through the Media Session API.
+- The audio cache key is a hash of the rules version, voice and exact text, so editing a lesson re-voices only the changed sentences.
+- Cues are `{t: area|obj|cursor|world_origin|origin|gizmo|keys, ...}`; the full list is in the `cues.py` docstring.
+  They are derived from the wording (the words "sidebar", "Outliner", "the cube", `[[G]]`...) and can be added by hand with a task's `cue:` line.
+- Without the voice engine installed the page falls back to the browser's own speech synthesis (no cues timing, flatter voice).
 
 ## Content scripts
 

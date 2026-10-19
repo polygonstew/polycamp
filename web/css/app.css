@@ -193,3 +193,27 @@ body.single .lesson { display: block; }
 body.single #mission { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 42vh; z-index: 40; background: #12100c; border-top: 2px solid var(--line2); padding: 10px 14px; }
 body.single #view { padding-bottom: 46vh; }
 @media (max-width: 1150px) { .lesson { display: block; } #mission { position: static; max-height: none; margin-top: 18px; } .map { grid-template-columns: 1fr; } .wcard:nth-of-type(even) { margin-top: 0; } .lab, .uvgrid { grid-template-columns: 1fr; } .hero { grid-template-columns: 1fr; } }
+
+/* ---- narration: a transport strip stuck under the top bar, and a rule down the margin of whatever is being read ---- */
+.narr-host { position: sticky; top: 58px; z-index: 30; margin: 0 0 20px; }
+body.hudonly .narr-host { top: 0; margin-bottom: 10px; }
+.narr { background: var(--panel); border: 1px solid var(--line2); border-left: 5px solid var(--info); box-shadow: var(--shadow); padding: 8px 12px 0; }
+.narr.waiting { border-left-color: var(--acc); } .narr.error { border-left-color: var(--bad); } .narr.paused, .narr.done { border-left-color: var(--line2); }
+.narr .nrow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-bottom: 8px; }
+.narr .nb { padding: .3em .5em; background: transparent; border: 1px solid var(--line2); color: var(--text); }
+.narr .nb.big { width: 40px; height: 36px; justify-content: center; padding: 0; } .narr .nb.pri { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); box-shadow: 3px 3px 0 var(--accd); }
+.narr .nb.txt { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; padding: .3em .7em; } .narr .nb.quiet { border-color: transparent; color: var(--faint); }
+.narr .nb span { line-height: 1; }
+.narr .ntxt { display: flex; flex-direction: column; min-width: 0; margin-left: 8px; line-height: 1.25; max-width: 38ch; }
+.narr .ntxt b { font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--info); }
+.narr .ntxt span { font-family: var(--serif); font-size: .95rem; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.narr .ntxt.acc b { color: var(--acc2); } .narr .ntxt.bad b { color: var(--bad); }
+.narr .nsel { padding: .15em .3em; font-size: .8rem; font-family: var(--mono); }
+.narr .nticks { display: flex; align-items: flex-end; gap: 2px; height: 16px; margin: 0 0 7px; }
+.narr .tick { flex: 1 1 0; max-width: 26px; min-width: 3px; height: 7px; padding: 0; border: 0; border-radius: 0; background: var(--line); box-shadow: none; display: block; }
+.narr .tick.ready { background: var(--line2); } .narr .tick.played { background: var(--acc); opacity: .75; }
+.narr .tick.k-task { height: 12px; } .narr .tick.now { height: 16px; background: var(--acc2); opacity: 1; } .narr .tick:hover { background: var(--text); }
+.narr .nprog { height: 3px; background: var(--line); margin: 0 -12px; } .narr .nprog i { display: block; height: 100%; width: 0; background: var(--info); }
+.narr.compact .ntxt { max-width: 18ch; } .narr.compact .nb.txt, .narr.compact .nsel { display: none; }
+.md > .speaking { border-left: 3px solid var(--info); margin-left: -14px; padding-left: 11px; background: linear-gradient(90deg, rgba(88, 193, 176, .09), transparent 75%); }
+.speaking:not(.md) { outline: 2px solid var(--info); outline-offset: 4px; }

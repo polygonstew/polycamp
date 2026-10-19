@@ -57,6 +57,10 @@ export function md(src) {
         i++;
       }
       out.push(`<${ordered ? 'ol' : 'ul'}>` + items.map(it => '<li>' + (it.length > 1 ? md(it.join('\n')).replace(/^<p>|<\/p>$/g, '') : inline(it[0])) + '</li>').join('') + `</${ordered ? 'ol' : 'ul'}>`);
+    } else if (/^ {4,}\S/.test(l)) {                                  // indented code block
+      const buf = [];
+      while (i < lines.length && (/^ {4,}\S/.test(lines[i]) || (!lines[i].trim() && /^ {4,}\S/.test(lines[i + 1] || '')))) buf.push(lines[i++].replace(/^ {4}/, ''));
+      out.push(`<pre><code>${esc(buf.join('\n'))}</code></pre>`);
     } else {
       const buf = [];
       while (i < lines.length && lines[i].trim() && !(buf.length && isBlockStart(lines[i]))) buf.push(lines[i++]);

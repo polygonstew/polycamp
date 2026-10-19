@@ -48,6 +48,28 @@ Prose is Markdown. `[[Shift+A]]` makes keycaps. `![](img:name.png)` shows `conte
 - No checks (or `manual`) means the learner presses **Mark done**.
 - `untested`: depends on GUI state (workspace, viewport, a render); the verifier skips it.
 - `allow_initial`: true from the start by design (for example "the add-on is connected").
+- `cue:` (optional) what to point at in Blender when this task is read aloud, comma separated:
+  `cue: outliner, obj:Cube, sidebar:Item, props:modifiers, timeline, keys:Ctrl+A, cursor, origin, gizmo, sel`.
+  Most tasks don't need it: highlights are derived from the wording (see below).
+
+## How a lesson sounds
+
+Every lesson can be read aloud (Narration in the app) with no extra work. The text is converted for the ear:
+`[[Ctrl+A]]` becomes "Control A", a run of keys becomes "G, X, 3, Enter", `3 m` "3 metres", `45°` "45 degrees", `×` "by", acronyms
+are spelled or pronounced (`UV`, `BSDF`, `HDRI`...; the list is `ACRONYM` in `server/speech.py`), `Cabin_Walls` is "Cabin Walls", code spans that
+are more than a few words are replaced by "the code on screen", and code blocks, tables and quiz options are announced or summarised.
+
+Write so it works when heard, not only when seen:
+
+- Put every key in `[[ ]]` and every typed value in backticks. That is what makes the key caps appear in Blender while it is said.
+- Say where things are in words ("in the sidebar, Item tab", "in the Outliner"), because those words drive the highlights.
+- Don't rely on a picture or a layout to carry meaning. A sentence like "see the table" is fine; the table's rows are read too if it is short.
+- Keep a sentence to one idea. Long ones are split at a comma but a short one is easier to follow while you are looking at Blender.
+- `:::cubby` text is read in Cubby's own voice; `:::reveal` boxes are only read if the learner turns that on.
+- `:::v 4+` blocks are read only when the learner's Blender matches.
+
+`python3 tools/voice_script.py <lesson-id> [blender-major]` prints exactly what will be spoken, sentence by sentence, with the highlights each one triggers.
+`python3 tools/voice_selftest.py` checks the whole campaign (leftover markup, oversized segments, tasks that would not be read).
 
 ### The check language
 

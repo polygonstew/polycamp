@@ -2,6 +2,22 @@
 
 Newest first.
 
+## 2026-10-18 (session 2: narration and highlights)
+
+Asked for: a much better than average reading of the lessons, so the learner can watch Blender while hearing what to do; then, whether the
+things being talked about can be highlighted inside Blender.
+
+1. Picked **Kokoro-82M** (ONNX) for the voice: best sound I know that runs on a CPU. Benchmarked on the i5-7200U: 0.75-0.8x real time whatever the model
+   (8-bit or full) or thread count, so: full model, 2 threads, low priority, everything cached, optional bulk pre-render.
+2. `speech.py`: lesson markdown -> segments -> sentences, written for the ear (keys, units, acronyms, code). Swept all 62 lessons x 3 Blender generations until no
+   leftover markup was left. Found and fixed on the way: indented code blocks that `md.js` rendered as a paragraph.
+3. `voice.py` / `voice_worker.py`: priority queue, content-hash cache, on-demand worker, per-sentence timings. Range-capable audio route.
+4. `voice.js` + bar: Coach and Audiobook modes, hints read aloud, media keys, owner logic when two windows are open, browser-speech fallback.
+5. Highlights: cues derived per sentence (`speech.derive_cues`), sent when the sentence is spoken (`/api/voice/cue` -> bridge -> `cues.py`).
+6. Discovered a real GUI Blender runs on Xvfb with software GL, which closed the biggest verification gap from session 1: built `tools/gui_test.sh` (every cue measured
+   in screenshots) and `tools/gui_e2e.py`, ran them on 3.3, 4.5 and 5.2. They found two version differences (tab ids, 3.x screenshots) that are now handled.
+7. Docs, installer (`install_voice.py`), pre-render CLI, self-tests.
+
 ## 2026-10-18 (session 1, one long run)
 
 1. **Add-on first** (it fixes the snapshot schema everything else is checked against). Snapshot, link threads, commands, scene kit,

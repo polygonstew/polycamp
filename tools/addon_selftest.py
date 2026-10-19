@@ -142,11 +142,29 @@ code = "o = kit.add_box.__name__\nbpy.context.scene['pc_test'] = o"
 r = commands.run({"id": 4, "cmd": "run_script", "args": {"code": code, "label": "t"}})
 check("run_script", r["ok"] and bpy.context.scene.get("pc_test") == "add_box", r)
 
+# --- highlight cues (drawing itself is covered by tools/gui_test.sh; here: the command, the state and the matching)
+from polycamp_link import cues
+bpy.context.scene.camera = bpy.data.objects["Camera"]
+r = commands.run({"id": 5, "cmd": "cue", "args": {"cues": [{"t": "obj", "m": "cube"}, {"t": "keys", "seq": ["G", "X"]}], "ttl": 5}})
+check("cue command accepted", r["ok"] and r["data"] == {}, r)
+check("cues are active", len(cues.active()) == 2, cues.STATE)
+vl = bpy.context.view_layer
+check("cue matches the cube by name", [o.name for o in cues.match_objects(vl, {"m": "cube"})] == ["Cube"])
+check("cue matches the camera by type", "Camera" in [o.name for o in cues.match_objects(vl, {"m": "camera"})],
+      [o.name for o in cues.match_objects(vl, {"m": "camera"})])
+check("cue matches the light by word", "Light" in [o.name for o in cues.match_objects(vl, {"m": "lamp"})],
+      [o.name for o in cues.match_objects(vl, {"m": "lamp"})])
+bpy.data.objects["Cube"].select_set(True)
+check("cue matches the selection", "Cube" in [o.name for o in cues.match_objects(vl, {"sel": True})])
+commands.run({"id": 6, "cmd": "cue", "args": {"cues": [], "ttl": 0}})
+check("an empty cue list clears", cues.active() == [])
+check("junk cues are ignored", cues.set_cues(["x", 3, None], 2) == 0)
+
 # --- icons used by the panel exist on this version
 try:
     icons = {i.identifier for i in bpy.types.UILayout.bl_rna.functions["label"].parameters["icon"].enum_items}
     need = {"CHECKMARK", "ERROR", "BOOKMARKS", "BLANK1", "CHECKBOX_HLT", "CHECKBOX_DEHLT", "QUESTION", "FILE_NEW",
-            "URL", "SETTINGS", "RENDER_STILL", "WINDOW", "FILE_REFRESH", "EXPORT"}
+            "URL", "SETTINGS", "RENDER_STILL", "WINDOW", "FILE_REFRESH", "EXPORT", "REW", "PLAY", "FF", "RESTRICT_VIEW_OFF"}
     check("panel icons exist", need <= icons, sorted(need - icons))
 except Exception as e:
     print("SKIP icon check", e)

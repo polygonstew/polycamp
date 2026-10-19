@@ -26,6 +26,10 @@ class POLYCAMP_Prefs(bpy.types.AddonPreferences):
     auto_send_renders: BoolProperty(name="Send finished renders to the Trophy Room", default=True)
     overlay: BoolProperty(name="Show tasks in the 3D viewport", default=False,
                           description="Single-screen mode: draws the current tasks over the viewport")
+    cues: BoolProperty(name="Highlight what the narration mentions", default=True,
+                       description="Outlines the sidebar, Outliner, objects and so on while the lesson is being read aloud")
+    cue_tabs: BoolProperty(name="Also switch to the tab being mentioned", default=False,
+                           description="Brings the Properties tab or sidebar tab named in the lesson to the front for you")
 
     def draw(self, context):
         col = self.layout.column()
@@ -34,6 +38,8 @@ class POLYCAMP_Prefs(bpy.types.AddonPreferences):
         col.prop(self, "allow_scripts")
         col.prop(self, "auto_send_renders")
         col.prop(self, "overlay")
+        col.prop(self, "cues")
+        col.prop(self, "cue_tabs")
         row = col.row()
         row.operator("polycamp.reconnect", icon="FILE_REFRESH")
         row.operator("polycamp.open_app", icon="URL")
@@ -133,6 +139,22 @@ class POLYCAMP_OT_export_model(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class POLYCAMP_OT_voice(bpy.types.Operator):
+    bl_idname = "polycamp.voice"
+    bl_label = "Narration"
+    bl_description = "Control the lesson narration playing in the Polycamp page"
+
+    action: EnumProperty(name="Action", items=[("toggle", "Play / pause", ""), ("replay", "Say it again", ""),
+                                               ("next", "Next part", ""), ("show", "Show me", "")], default="toggle")
+
+    def execute(self, context):
+        try:
+            link.post("/api/voice/ctl", {"action": self.action}, timeout=3)
+        except Exception as e:
+            self.report({"WARNING"}, "Can't reach Polycamp: %s" % e)
+        return {"FINISHED"}
+
+
 class POLYCAMP_OT_overlay(bpy.types.Operator):
     bl_idname = "polycamp.overlay"
     bl_label = "Toggle task overlay"
@@ -191,6 +213,11 @@ class POLYCAMP_PT_main(bpy.types.Panel):
             row.operator("polycamp.prep", text="Set up scene", icon="FILE_NEW")
         else:
             lay.label(text="Pick a lesson in the app.")
+        row = lay.row(align=True)
+        row.operator("polycamp.voice", text="", icon="REW").action = "replay"
+        row.operator("polycamp.voice", text="Narration", icon="PLAY").action = "toggle"
+        row.operator("polycamp.voice", text="", icon="FF").action = "next"
+        row.operator("polycamp.voice", text="", icon="RESTRICT_VIEW_OFF").action = "show"
         if S.toast and time.time() - S.toast[1] < 40:
             box = lay.box()
             for ln in _wrap(S.toast[0], 34):
@@ -246,8 +273,23 @@ def _draw_overlay():
 
 
 CLASSES = (POLYCAMP_Prefs, POLYCAMP_OT_open_app, POLYCAMP_OT_reconnect, POLYCAMP_OT_hint, POLYCAMP_OT_prep,
-           POLYCAMP_OT_cpu_preset, POLYCAMP_OT_send_render, POLYCAMP_OT_export_model, POLYCAMP_OT_overlay,
-           POLYCAMP_PT_main)
+           POLYCAMP_OT_cpu_preset, POLYCAMP_OT_send_render, POLYCAMP_OT_export_model, POLYCAMP_OT_voice,
+           POLYCAMP_OT_overlay, POLYCAMP_PT_main)
+
+_keymaps = []
+# Ctrl+Shift+  .  next part,  ,  say it again,  /  play or pause. Window keymap, so they work in every editor.
+KEYS = (("PERIOD", "next"), ("COMMA", "replay"), ("SLASH", "toggle"))
+
+
+def _add_keymaps():
+    kc = bpy.context.window_manager.keyconfigs.addon
+    if kc is None:
+        return
+    km = kc.keymaps.new(name="Window", space_type="EMPTY")
+    for key, action in KEYS:
+        kmi = km.keymap_items.new("polycamp.voice", key, "PRESS", ctrl=True, shift=True)
+        kmi.properties.action = action
+        _keymaps.append((km, kmi))
 
 
 def register():
@@ -256,10 +298,17 @@ def register():
         bpy.utils.register_class(c)
     if not bpy.app.background:
         _draw_handle = bpy.types.SpaceView3D.draw_handler_add(_draw_overlay, (), "WINDOW", "POST_PIXEL")
+        _add_keymaps()
 
 
 def unregister():
     global _draw_handle
+    for km, kmi in _keymaps:
+        try:
+            km.keymap_items.remove(kmi)
+        except Exception:
+            pass
+    _keymaps.clear()
     if _draw_handle is not None:
         bpy.types.SpaceView3D.draw_handler_remove(_draw_handle, "WINDOW")
         _draw_handle = None

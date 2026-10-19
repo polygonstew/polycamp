@@ -11,9 +11,10 @@ ADDON_SRC = ROOT / "addon" / "polycamp_link"
 DATA = Path(os.environ.get("POLYCAMP_DATA", ROOT / "data"))
 PORT = int(os.environ.get("POLYCAMP_PORT", "8570"))
 HOST = os.environ.get("POLYCAMP_HOST", "0.0.0.0")
-VERSION = "1.0.0"
+VERSION = "1.1.0"
+VOICE_HOME = Path(os.environ.get("POLYCAMP_VOICE_HOME", Path.home() / ".polycamp" / "voice"))   # venv + models
 
-for sub in ("renders", "textures", "uv", "models", "shots", "tmp"):
+for sub in ("renders", "textures", "uv", "models", "shots", "tmp", "voice"):
     (DATA / sub).mkdir(parents=True, exist_ok=True)
 
 DEFAULTS = {
@@ -29,6 +30,15 @@ DEFAULTS = {
     "theme": "ember",
     "text_scale": 1.0,
     "unlock_all": True,            # nothing is locked; the map just recommends the next step
+    "voice_on": False,             # narration bar open on lessons (and the next lesson is prepared ahead)
+    "voice_narrator": "af_heart",  # Kokoro voice ids; see Settings
+    "voice_cubby": "am_puck",
+    "voice_cubby_on": True,        # Cubby's asides are read, in their own voice
+    "voice_extras": False,         # also read the "more" boxes and figure captions
+    "voice_speed": 1.0,
+    "voice_mode": "coach",         # coach: wait at each task until Blender confirms it | book: read straight through
+    "voice_cues": True,            # point at things in Blender while they are mentioned
+    "voice_threads": 2,            # CPU threads for synthesis; more doesn't help on a 2-core laptop
 }
 
 _lock = threading.Lock()
