@@ -17,21 +17,23 @@ bl_info = {
 
 if "bpy" in locals():                      # F8 / reload support
     import importlib
-    for _m in ("config", "compat", "snapshot", "scenekit", "matkit", "uvlayout", "cues", "commands", "link", "ui"):
+    for _m in ("config", "compat", "snapshot", "scenekit", "matkit", "uvlayout", "cues", "keywatch", "commands", "link", "ui"):
         if _m in globals():
             importlib.reload(globals()[_m])
 else:
     import bpy
-    from . import config, compat, snapshot, scenekit, matkit, uvlayout, cues, commands, link, ui  # noqa: F401
+    from . import config, compat, snapshot, scenekit, matkit, uvlayout, cues, keywatch, commands, link, ui  # noqa: F401
 
 
 def register():
     ui.register()
     cues.register()
+    keywatch.register()
     link.register()
 
 
 def unregister():
     link.unregister()
+    keywatch.unregister()
     cues.unregister()
     ui.unregister()

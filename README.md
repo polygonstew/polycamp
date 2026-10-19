@@ -38,7 +38,7 @@ and pause. After updating the add-on (download it again from the Link page) the 
 | | |
 | --- | --- |
 | **The campaign** | 10 worlds: setup, mesh modelling, modifiers, environment, materials, UV and textures, light and render, animation, geometry nodes and pipeline, the final boss. Each lesson has tasks that are checked live, quizzes, hints and a solution script. |
-| **Hotkey Dojo** | Flash cards you answer by pressing the real keys, with spaced repetition. |
+| **Hotkey Dojo** | Flash cards you answer by pressing the real keys, with spaced repetition. Press them on the page or in Blender (the add-on relays them, so you don't have to click back and forth). Works on laptops without a numpad, and every card can be skipped. |
 | **Texture Lab** | Tileable textures (procedural, ComfyUI on the CPU, or your own picture), seamless blending, normal / roughness / height / AO maps, sent to Blender or exported to Godot or Kiln. |
 | **UV Lab** | Pull an object's UV layout out of Blender, paint on it, optionally repaint with ComfyUI img2img, send it back. |
 | **Renders** | Every render you finish in Blender lands here automatically. |

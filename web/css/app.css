@@ -217,3 +217,9 @@ body.hudonly .narr-host { top: 0; margin-bottom: 10px; }
 .narr.compact .ntxt { max-width: 18ch; } .narr.compact .nb.txt, .narr.compact .nsel { display: none; }
 .md > .speaking { border-left: 3px solid var(--info); margin-left: -14px; padding-left: 11px; background: linear-gradient(90deg, rgba(88, 193, 176, .09), transparent 75%); }
 .speaking:not(.md) { outline: 2px solid var(--info); outline-offset: 4px; }
+
+/* ---- drills: tester, skip row, a drill box that looks clickable ---- */
+.keydrill { padding: 12px 14px; border: 1px dashed var(--line2); background: var(--bg2); } .keydrill:hover { border-color: var(--acc); } .keydrill:focus { border-style: solid; border-color: var(--info); outline: 0; }
+.keytest { margin: 18px 0 6px; padding: 12px 14px; border: 1px dashed var(--line2); background: var(--bg2); cursor: pointer; } .keytest:hover { border-color: var(--acc); }
+.keytest.live { border-style: solid; border-color: var(--info); outline: 0; } .keytest .out { font-size: 1.15rem; margin: 6px 0; min-height: 1.8em; }
+.arena .lap { color: var(--dim); font-size: .9rem; min-height: 1.3em; } .arena .skiprow { margin-top: 14px; }

@@ -24,6 +24,7 @@ CAP = (0.13, 0.12, 0.09, 0.96)
 TXT = (0.93, 0.90, 0.83, 1.0)
 
 STATE = {"cues": [], "until": 0.0, "t0": 0.0, "src": "", "errors": 0}
+BANNER = {"text": "", "until": 0.0}                   # one line across the top of the 3D viewport (the hotkey drill uses it)
 _handles = []          # (space class, region type, handle)
 _shader = None
 
@@ -54,6 +55,12 @@ def set_cues(cues, ttl=8.0, tabs=False):
             bpy.app.timers.register(_tick, first_interval=0.4)
     _redraw()
     return len(cues)
+
+
+def set_banner(text, ttl=0.0):
+    """A message across the top of every 3D viewport for `ttl` seconds ('' clears it)."""
+    BANNER.update(text=text, until=time.time() + float(ttl) if text else 0.0)
+    _redraw()
 
 
 def _tick():
@@ -320,14 +327,20 @@ def _area_matches(area, sp, cue):
 
 def _draw(region_type):
     try:
-        cues = active()
-        if not cues:
-            return
         ctx = bpy.context
         area, region, sp = ctx.area, ctx.region, ctx.space_data
         if area is None or region is None:
             return
         us = _scale()
+        if BANNER["text"] and time.time() < BANNER["until"] and region_type == "WINDOW" and area.type == "VIEW_3D":
+            size = 15 * us
+            tw = _text_w(BANNER["text"], size)[0]
+            x0, y1 = (region.width - tw) / 2 - 12 * us, region.height - 44 * us
+            _fill([(x0, y1 - 30 * us, x0 + tw + 24 * us, y1)], (ACC[0], ACC[1], ACC[2], 0.97))
+            _text(x0 + 12 * us, y1 - 21 * us, BANNER["text"], size, INK)
+        cues = active()
+        if not cues:
+            return
         fade = min(1.0, (time.time() - STATE["t0"]) / 0.18)
         for c in cues:
             if c.get("t") == "area" and region.type == c.get("region", "WINDOW") and _area_matches(area, sp, c):

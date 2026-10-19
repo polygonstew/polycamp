@@ -160,6 +160,13 @@ commands.run({"id": 6, "cmd": "cue", "args": {"cues": [], "ttl": 0}})
 check("an empty cue list clears", cues.active() == [])
 check("junk cues are ignored", cues.set_cues(["x", 3, None], 2) == 0)
 
+# --- key relay for the hotkey drills (the real thing is exercised by tools/gui_keys_test.py)
+from polycamp_link import keywatch
+r = commands.run({"id": 7, "cmd": "keywatch", "args": {"on": True, "ttl": 5, "swallow": True}})
+check("keywatch command accepted headless", r["ok"] and keywatch.STATE["swallow"] and keywatch.STATE["until"] > 0, r)
+commands.run({"id": 8, "cmd": "keywatch", "args": {"on": False}})
+check("keywatch off", keywatch.STATE["until"] == 0 and not keywatch.STATE["swallow"])
+
 # --- icons used by the panel exist on this version
 try:
     icons = {i.identifier for i in bpy.types.UILayout.bl_rna.functions["label"].parameters["icon"].enum_items}

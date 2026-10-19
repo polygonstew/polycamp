@@ -1,9 +1,10 @@
 #!/bin/sh
 # Run the GUI highlight test in a real Blender on a virtual display (Linux, needs xvfb-run):
-#     sh tools/gui_test.sh [blender-binary] [screenshot-dir]
+#     sh tools/gui_test.sh [blender-binary] [output-dir] [test-script, default gui_cues_test.py]
 # Works with any Blender 3.3+. A throw-away user config keeps the splash screen and old prefs out of the way.
 BLENDER="${1:-blender}"
 OUT="${2:-/tmp/polycamp-gui}"
+TEST="${3:-gui_cues_test.py}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 CFG="$(mktemp -d)"
 export BLENDER_USER_CONFIG="$CFG"
@@ -16,6 +17,6 @@ bpy.ops.wm.save_userpref()
 EOF
 "$BLENDER" -b --factory-startup --python "$CFG/prefs.py" >/dev/null 2>&1
 mkdir -p "$OUT"
-xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" "$BLENDER" --python "$HERE/gui_cues_test.py" -- "$OUT" 2>&1 | tee "$OUT/log.txt" | grep -E "^(PASS|FAIL|==|Traceback|Error|  File)|Error:"
+xvfb-run -a -s "-screen 0 1920x1080x24 +extension GLX +render -noreset" "$BLENDER" --enable-event-simulate --python "$HERE/$TEST" -- "$OUT" 2>&1 | tee "$OUT/log.txt" | grep -E "^(PASS|FAIL|==|Traceback|Error|  File)|Error:"
 rm -rf "$CFG"
 ! grep -q "^FAIL\|Traceback" "$OUT/log.txt" && grep -q "ALL PASSED" "$OUT/log.txt"

@@ -292,6 +292,9 @@ class H(BaseHTTPRequestHandler):
         try:
             if route == "bridge/sync":
                 return self.bridge_sync(data)
+            if route == "bridge/keys":                # a key pressed inside Blender (the add-on relays them for the hotkey drills)
+                HUB.publish("key", combo=str(data.get("combo", ""))[:40])
+                return {"ok": True}
             if route == "bridge/command":
                 if data.get("cmd") in BLOCKED_CMDS:
                     return {"ok": False, "error": "That command is reserved for lessons."}

@@ -15,6 +15,7 @@
 | `matkit.py` | Material from image maps, and the CPU render presets. |
 | `uvlayout.py` | Draws a UV layout PNG with numpy: teal coverage, red overlap, white edges. |
 | `compat.py` | Every version difference the add-on cares about (Principled socket names, engine ids, compositor tree, slotted actions). |
+| `keywatch.py` | Reports the keys pressed in Blender to the app while a hotkey drill is open (a small modal operator; `keywatch` command; expires unless renewed). Pass-through by default; in *swallow* mode (Dojo rounds) Blender does not act on the keys and a banner says so. Key names are the drill's own ("Ctrl+Shift+A", "Numpad 7"). |
 | `ui.py` | Preferences, sidebar panel (N > Polycamp), operators, optional in-viewport task overlay, the Narration buttons and their Ctrl+Shift keys. |
 | `cues.py` | The `cue` command's other half: draw handlers that paint "look here" marks over the editors (outline and tag for an editor or region, boxes on objects, rings at the 3D cursor / origins / gizmo, key caps). Filled quads only, so it works on every GPU backend; clears itself after the cue's time-to-live. |
 
@@ -68,6 +69,16 @@ seamless blend, height / normal / roughness / AO derivation). `icons.js` is the 
 - Cues are `{t: area|obj|cursor|world_origin|origin|gizmo|keys, ...}`; the full list is in the `cues.py` docstring.
   They are derived from the wording (the words "sidebar", "Outliner", "the cube", `[[G]]`...) and can be added by hand with a task's `cue:` line.
 - Without the voice engine installed the page falls back to the browser's own speech synthesis (no cues timing, flatter voice).
+
+### Hotkey drills
+
+A web page only sees keys typed into its own window, so with Blender on one screen and the app on the other a drill used to mean
+clicking the page, pressing, then clicking Blender again. Now `keys.js:watchBlender()` asks the add-on (`keywatch` command, renewed every 4 s,
+expires in 12 s if the page goes away) to report Blender's key presses: add-on -> `POST /api/bridge/keys` -> SSE `key` -> the drill.
+Browser keys and Blender keys answer the same card (`keys.js:judge`). Dojo rounds use swallow mode and fall back to pass-through after 45 s of silence.
+
+Matching (`keys.js`): `alternatives()` accepts laptop stand-ins for numpad keys (number row, `. / -`, Shift+`=` for +), `seqOf()` makes "G G" a two-press card,
+modifier-only presses are shown live, and every card can be skipped (remembered in localStorage). The key tester on the Dojo menu shows what the page receives.
 
 ## Content scripts
 

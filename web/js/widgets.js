@@ -2,7 +2,7 @@
 import { h } from './ui.js';
 import { api } from './api.js';
 import { md, inline, keycaps } from './md.js';
-import { capture, matches } from './keys.js';
+import { capture, judge, seqOf, laptopAlternatives, watchBlender } from './keys.js';
 import { icon } from './icons.js';
 const tick = icon('check', 14) + ' ';
 
@@ -88,26 +88,49 @@ export function fill(b, done, onSolved) {
 
 export function keys(b, done, onSolved) {
   const rows = b.rows;
-  let i = 0, stop = null;
+  let i = 0, stop = null, stopBlender = null;
+  const st = { step: 0 };
   const big = h('div', { class: 'big' });
-  const hint = h('div', { class: 'dim' }, 'Click here, then press the keys on your keyboard.');
+  const hint = h('div', { class: 'dim' });
+  const lap = h('div', { class: 'faint', style: { fontSize: '.85rem' } });
   const prog = h('div', { class: 'prog' }, rows.map(() => h('i')));
-  const area = h('div', { class: 'keydrill', tabindex: '0' }, big, hint, prog);
-  const show = () => { big.textContent = rows[i] ? rows[i].action : 'Done'; prog.childNodes.forEach((n, k) => n.className = k < i ? 'ok' : ''); };
-  const stopCap = () => { if (stop) { stop(); stop = null; } };
-  const start = () => {
-    if (stop || i >= rows.length) return;
-    stop = capture(async (combo) => {
-      if (matches(rows[i].combo, combo)) {
-        i++; show(); hint.textContent = 'Yes: ' + combo;
-        if (i >= rows.length) { stopCap(); const r = await api('answer', { id: b.id, value: true }); onSolved(r); }
-      } else hint.innerHTML = `You pressed ${keycaps(combo)}. Expected ${keycaps(rows[i].combo)}.`;
-    });
+  const area = h('div', { class: 'keydrill', tabindex: '0' }, big, hint, lap, prog);
+  const idle = 'Click here to start. Then press the keys: on this page or in Blender.';
+  const show = () => {
+    big.textContent = rows[i] ? rows[i].action : 'Done';
+    prog.childNodes.forEach((n, k) => n.className = k < i ? 'ok' : '');
+    const r = rows[i], alts = r ? laptopAlternatives(r.combo) : [], seq = r && seqOf(r.combo);
+    lap.innerHTML = alts.length ? 'No numpad? ' + alts.map(a => keycaps(a)).join(' or ') + ' works too.' : seq ? `Press ${seq.length} times in a row.` : '';
   };
-  area.addEventListener('focus', start); area.addEventListener('blur', stopCap);
-  if (done) { i = rows.length; hint.textContent = 'Solved.'; }
+  const stopCap = () => { if (stop) { stop(); stop = null; } };
+  const stopAll = () => { stopCap(); if (stopBlender) { stopBlender(); stopBlender = null; } };
+  const advance = async () => {
+    i++; st.step = 0; show();
+    if (i >= rows.length) {
+      stopAll(); hint.textContent = 'Done.'; skip.classList.add('hide');
+      const r = await api('answer', { id: b.id, value: true });
+      onSolved(r);
+    }
+  };
+  const press = combo => {
+    if (i >= rows.length) return;
+    const row = rows[i], r = judge(row.combo, combo, st);
+    if (r === 'ok') { hint.innerHTML = 'Yes: ' + keycaps(combo); advance(); }
+    else if (r === 'more') hint.innerHTML = keycaps(combo) + ' then …';
+    else hint.innerHTML = `You pressed ${keycaps(combo)}. Expected ${keycaps(row.combo)}.`;
+  };
+  const start = () => {                                      // the page listens while this box has focus ...
+    if (i >= rows.length) return;
+    if (!stop) stop = capture(press, held => { if (held.length) hint.innerHTML = held.map(k => keycaps(k)).join(' + ') + ' + …'; });
+    if (!stopBlender) stopBlender = watchBlender(press, () => area.isConnected);   // ... and Blender's keys count until it is solved
+    hint.textContent = 'Listening. Press the keys, here or in Blender.';
+  };
+  area.addEventListener('focus', start);
+  area.addEventListener('blur', () => { stopCap(); if (i < rows.length) hint.textContent = stopBlender ? 'Listening for keys pressed in Blender. Click here to type them on this page instead.' : idle; });
+  if (done) { i = rows.length; hint.textContent = 'Solved.'; } else hint.textContent = idle;
   show();
-  return frame(b, 'Hotkey drill', done, area);
+  const skip = h('button', { class: 'sm ghost', onclick: () => { if (i < rows.length) advance(); } }, 'Can’t press this one: skip');
+  return frame(b, 'Hotkey drill', done, area, done ? null : skip);
 }
 
 export const WIDGETS = { quiz, order, match, fill, keys };

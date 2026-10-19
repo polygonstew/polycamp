@@ -98,6 +98,14 @@ def _cue(a):
     return {"_msg": "%d cue(s)" % n}
 
 
+@reg("keywatch")
+def _keywatch(a):
+    """Report the keys pressed in Blender to the app while a hotkey drill is open (keywatch.py). Expires unless renewed."""
+    from . import keywatch
+    keywatch.set_watch(bool(a.get("on", True)), a.get("ttl", 25), bool(a.get("swallow", False)))
+    return {"_msg": "watching keys" if a.get("on", True) else "stopped watching keys"}
+
+
 @reg("new_scene")
 def _new_scene(a):
     kept = backup_if_needed() if a.get("backup", True) else None

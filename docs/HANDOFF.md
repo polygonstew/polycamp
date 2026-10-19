@@ -23,6 +23,16 @@ builds starter scenes and moves textures, UV layouts, renders and models both wa
 
 Repo: private `github.com/polygonstew/polycamp`, default branch `dev` (never pushed to `main`).
 
+## Hotkey drills fixed (session 2, later)
+
+The user said the hotkey drills "don't seem to work" and that they have to click Blender again after clicking the drill. Found and fixed:
+the Dojo's default Navigation deck is mostly numpad keys that a laptop cannot press (only the digits had a stand-in), one card (`G G`) was
+unanswerable, Chrome keeps Ctrl+digit, and a press that never reached the page left no feedback and no way out. Now: laptop stand-ins for all numpad keys,
+two-press cards, a Skip on every card (offered after 7 s of silence), live modifier display, a key tester on the Dojo menu, and
+**keys pressed in Blender count** (add-on `keywatch.py`, see ARCHITECTURE "Hotkey drills"), so nobody has to click between the windows.
+Tests: `tools/dojo_smoke.py` (browser), `tools/gui_keys_test.py` via `tools/gui_test.sh <blender> <out> gui_keys_test.py` (real GUI Blender 3.3 / 4.5 / 5.2).
+Not verified: what the user's actual browser/desktop does with specific combos (that is what the key tester is for). The add-on must be reinstalled to get the Blender-side keys.
+
 ## Narration, in short (session 2)
 
 User asked for "a better than average, quite better actually" reading of the lessons so they can look at Blender while hearing what to do,
@@ -57,6 +67,8 @@ then asked whether areas could be highlighted inside Blender during the lecture.
     /usr/bin/python3 tools/md_parity.py                                          # python and browser markdown splitters agree
     /usr/bin/python3 tools/voice_smoke.py <outdir>                               # narrator in headless Chromium (needs the voice engine)
     sh tools/gui_test.sh <blender-binary> <outdir>                               # real GUI Blender on Xvfb: all highlight types + the panel
+    sh tools/gui_test.sh <blender-binary> <outdir> gui_keys_test.py              # same rig: the key relay for the hotkey drills
+    /usr/bin/python3 tools/dojo_smoke.py <outdir>                                # hotkey drills in headless Chromium
     /usr/bin/python3 tools/gui_e2e.py <blender-binary> <outdir>                  # browser narrator -> server -> GUI Blender, and back
     blender -b --factory-startup --python tools/make_goal_images.py              # re-render content/img/*.png after library changes
     python3 tools/make_curriculum.py                                             # refresh docs/CURRICULUM.md
